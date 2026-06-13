@@ -388,6 +388,7 @@ function CategoryRow({
   onSeeAll: () => void;
   favKind: FavKind;
 }) {
+  useBrokenVersion();
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) => {
     const el = scrollRef.current;
@@ -414,7 +415,7 @@ function CategoryRow({
           ref={scrollRef}
           className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {items.map((it) => (
+          {items.filter((it) => !!it.image && !brokenImages.has(it.image)).map((it) => (
             <div key={String(it.id)} className="w-[150px] shrink-0 snap-start sm:w-[170px]">
               <PrimePoster item={it} onPlay={onPlay} onOpen={onOpen} badge={renderCardBadge?.(it)} favKind={favKind} />
             </div>
