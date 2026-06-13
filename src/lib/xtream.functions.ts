@@ -7,17 +7,21 @@ const inputSchema = z.object({
   password: z.string().min(1).max(200),
 });
 
-type LoginResult =
+type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
+type JsonObject = { [k: string]: JsonValue };
+
+export type LoginResult =
   | {
       ok: true;
       package: XtreamPackage;
       dns: string;
       username: string;
       password: string;
-      user_info: Record<string, unknown>;
-      server_info: Record<string, unknown>;
+      user_info: JsonObject;
+      server_info: JsonObject;
     }
   | { ok: false; error: string };
+
 
 async function tryServer(dns: string, username: string, password: string) {
   const url = `${dns}/player_api.php?username=${encodeURIComponent(
