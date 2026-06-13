@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTvRouteImport } from './routes/_authenticated/tv'
 import { Route as AuthenticatedSeriesRouteImport } from './routes/_authenticated/series'
+import { Route as AuthenticatedPerfisRouteImport } from './routes/_authenticated/perfis'
 import { Route as AuthenticatedFilmesRouteImport } from './routes/_authenticated/filmes'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
 import { Route as AuthenticatedSerieIdRouteImport } from './routes/_authenticated/serie.$id'
@@ -43,6 +44,11 @@ const AuthenticatedSeriesRoute = AuthenticatedSeriesRouteImport.update({
   path: '/series',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPerfisRoute = AuthenticatedPerfisRouteImport.update({
+  id: '/perfis',
+  path: '/perfis',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFilmesRoute = AuthenticatedFilmesRouteImport.update({
   id: '/filmes',
   path: '/filmes',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/conta': typeof AuthenticatedContaRoute
   '/filmes': typeof AuthenticatedFilmesRoute
+  '/perfis': typeof AuthenticatedPerfisRoute
   '/series': typeof AuthenticatedSeriesRoute
   '/tv': typeof AuthenticatedTvRoute
   '/serie/$id': typeof AuthenticatedSerieIdRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/conta': typeof AuthenticatedContaRoute
   '/filmes': typeof AuthenticatedFilmesRoute
+  '/perfis': typeof AuthenticatedPerfisRoute
   '/series': typeof AuthenticatedSeriesRoute
   '/tv': typeof AuthenticatedTvRoute
   '/': typeof AuthenticatedIndexRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/_authenticated/filmes': typeof AuthenticatedFilmesRoute
+  '/_authenticated/perfis': typeof AuthenticatedPerfisRoute
   '/_authenticated/series': typeof AuthenticatedSeriesRoute
   '/_authenticated/tv': typeof AuthenticatedTvRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/conta'
     | '/filmes'
+    | '/perfis'
     | '/series'
     | '/tv'
     | '/serie/$id'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/conta'
     | '/filmes'
+    | '/perfis'
     | '/series'
     | '/tv'
     | '/'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/conta'
     | '/_authenticated/filmes'
+    | '/_authenticated/perfis'
     | '/_authenticated/series'
     | '/_authenticated/tv'
     | '/_authenticated/'
@@ -173,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSeriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/perfis': {
+      id: '/_authenticated/perfis'
+      path: '/perfis'
+      fullPath: '/perfis'
+      preLoaderRoute: typeof AuthenticatedPerfisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/filmes': {
       id: '/_authenticated/filmes'
       path: '/filmes'
@@ -207,6 +226,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedContaRoute: typeof AuthenticatedContaRoute
   AuthenticatedFilmesRoute: typeof AuthenticatedFilmesRoute
+  AuthenticatedPerfisRoute: typeof AuthenticatedPerfisRoute
   AuthenticatedSeriesRoute: typeof AuthenticatedSeriesRoute
   AuthenticatedTvRoute: typeof AuthenticatedTvRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -217,6 +237,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContaRoute: AuthenticatedContaRoute,
   AuthenticatedFilmesRoute: AuthenticatedFilmesRoute,
+  AuthenticatedPerfisRoute: AuthenticatedPerfisRoute,
   AuthenticatedSeriesRoute: AuthenticatedSeriesRoute,
   AuthenticatedTvRoute: AuthenticatedTvRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
@@ -234,3 +255,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
