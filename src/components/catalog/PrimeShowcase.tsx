@@ -74,7 +74,17 @@ export function PrimeShowcase({
       .slice(0, rowLimit);
   }, [activeCat, cats.data, featured.data, rowLimit]);
 
-  const hero = featured.data?.find((i) => !!i.image) ?? featured.data?.[0];
+  const heroPool = useMemo(
+    () => (featured.data ?? []).filter((i) => !!i.image).slice(0, 5),
+    [featured.data],
+  );
+  const [heroIdx, setHeroIdx] = useState(0);
+  useEffect(() => {
+    if (heroPool.length < 2) return;
+    const t = setInterval(() => setHeroIdx((i) => (i + 1) % heroPool.length), 6000);
+    return () => clearInterval(t);
+  }, [heroPool.length]);
+  const hero = heroPool[heroIdx] ?? featured.data?.[0];
 
   const filtered = useMemo(() => {
     if (activeCat === "all") return [];
@@ -88,7 +98,15 @@ export function PrimeShowcase({
     <div>
       {/* HERO */}
       {activeCat === "all" && hero ? (
-        <HeroBanner item={hero} title={title} onPlay={onPlay} onOpen={onOpen} />
+        <HeroBanner
+          item={hero}
+          title={title}
+          onPlay={onPlay}
+          onOpen={onOpen}
+          dots={heroPool.length}
+          activeDot={heroIdx}
+          onDot={setHeroIdx}
+        />
       ) : null}
 
       {/* Category bar */}
@@ -204,11 +222,17 @@ function HeroBanner({
   title,
   onPlay,
   onOpen,
+  dots = 0,
+  activeDot = 0,
+  onDot,
 }: {
   item: ShowcaseItem;
   title: string;
   onPlay: (i: ShowcaseItem) => void;
   onOpen?: (i: ShowcaseItem) => void;
+  dots?: number;
+  activeDot?: number;
+  onDot?: (i: number) => void;
 }) {
   return (
     <section className="relative h-[55vh] min-h-[360px] w-full overflow-hidden">
@@ -249,6 +273,21 @@ function HeroBanner({
             </div>
           </div>
         </div>
+        {dots > 1 ? (
+          <div className="pointer-events-auto absolute bottom-6 right-6 z-10 flex gap-2">
+            {Array.from({ length: dots }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => onDot?.(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={
+                  "h-2 rounded-full transition-all " +
+                  (i === activeDot ? "w-6 bg-foreground" : "w-2 bg-foreground/40 hover:bg-foreground/70")
+                }
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
