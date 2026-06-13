@@ -17,7 +17,6 @@ import { Route as AuthenticatedSeriesRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPerfisRouteImport } from './routes/_authenticated/perfis'
 import { Route as AuthenticatedFilmesRouteImport } from './routes/_authenticated/filmes'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
-import { Route as AuthenticatedPerfisRouteImport } from './routes/_authenticated/perfis'
 import { Route as AuthenticatedSerieIdRouteImport } from './routes/_authenticated/serie.$id'
 import { Route as AuthenticatedWatchTypeIdRouteImport } from './routes/_authenticated/watch.$type.$id'
 
@@ -58,11 +57,6 @@ const AuthenticatedFilmesRoute = AuthenticatedFilmesRouteImport.update({
 const AuthenticatedContaRoute = AuthenticatedContaRouteImport.update({
   id: '/conta',
   path: '/conta',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPerfisRoute = AuthenticatedPerfisRouteImport.update({
-  id: '/perfis',
-  path: '/perfis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSerieIdRoute = AuthenticatedSerieIdRouteImport.update({
