@@ -10,12 +10,12 @@ export function AppHeader() {
   const session = typeof window !== "undefined" ? loadSession() : null;
   const pkgLabel = session?.package === "MAX" ? "Pacote Max" : "Pacote Premium";
 
-  const nav = [
+  const nav: { to: "/" | "/filmes" | "/series" | "/tv"; label: string; icon: typeof Home; exact?: boolean }[] = [
     { to: "/", label: "Início", icon: Home, exact: true },
     { to: "/filmes", label: "Filmes", icon: Film },
     { to: "/series", label: "Séries", icon: Clapperboard },
     { to: "/tv", label: "TV ao Vivo", icon: Tv },
-  ] as const;
+  ];
 
   function handleSignOut() {
     clearSession();
