@@ -1,10 +1,11 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogOut, Film, Tv, Clapperboard, User, Home, Users } from "lucide-react";
+import { LogOut, Film, Tv, Clapperboard, User, Home, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearSession, loadSession } from "@/lib/xtream";
 import { Logo } from "@/components/Logo";
 import { clearActiveProfile, getActiveProfile, onProfilesChanged, type Profile } from "@/lib/profiles";
+import { isAdmin, onSettingsChanged } from "@/lib/settings";
 
 export function AppHeader() {
   const navigate = useNavigate();
@@ -13,9 +14,13 @@ export function AppHeader() {
   const pkgLabel = session?.package === "MAX" ? "Pacote Max" : "Pacote Premium";
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [admin, setAdmin] = useState(false);
   useEffect(() => {
     setProfile(getActiveProfile());
-    return onProfilesChanged(() => setProfile(getActiveProfile()));
+    setAdmin(isAdmin());
+    const off1 = onProfilesChanged(() => setProfile(getActiveProfile()));
+    const off2 = onSettingsChanged(() => setAdmin(isAdmin()));
+    return () => { off1(); off2(); };
   }, []);
 
   const nav: { to: "/" | "/filmes" | "/series" | "/tv"; label: string; icon: typeof Home; exact?: boolean }[] = [
@@ -76,6 +81,11 @@ export function AppHeader() {
               <span className="hidden max-w-[120px] truncate sm:inline">{profile.name}</span>
               <Users className="size-3.5 text-muted-foreground" />
             </button>
+          ) : null}
+          {admin ? (
+            <Button asChild variant={pathname.startsWith("/admin") ? "secondary" : "ghost"} size="sm" title="Administração">
+              <Link to="/admin"><Shield className="size-4" /></Link>
+            </Button>
           ) : null}
           <Button asChild variant={pathname.startsWith("/conta") ? "secondary" : "ghost"} size="sm">
             <Link to="/conta">

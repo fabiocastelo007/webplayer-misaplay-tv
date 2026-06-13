@@ -20,9 +20,21 @@ export type LoginResult =
 const loginSchema = z.object({
   username: z.string().trim().min(1).max(120),
   password: z.string().min(1).max(200),
+  servers: z
+    .array(z.object({ id: z.enum(["MAX", "PREMIUM"]), label: z.string(), dns: z.string().url() }))
+    .optional(),
 });
 
-async function tryServer(dns: string, username: string, password: string) {
+type AttemptOk = {
+  kind: "ok";
+  json: {
+    user_info: { auth?: number | string; status?: string };
+    server_info?: Record<string, unknown>;
+  };
+};
+type AttemptResult = AttemptOk | { kind: "invalid" } | { kind: "unreachable"; status?: number };
+
+async function tryServer(dns: string, username: string, password: string): Promise<AttemptResult> {
   const url = `${dns}/player_api.php?username=${encodeURIComponent(
     username,
   )}&password=${encodeURIComponent(password)}`;
@@ -31,16 +43,19 @@ async function tryServer(dns: string, username: string, password: string) {
     const t = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
-    if (!res.ok) return null;
-    const json = (await res.json()) as {
-      user_info?: { auth?: number | string; status?: string };
-      server_info?: Record<string, unknown>;
-    };
-    if (!json?.user_info) return null;
-    if (Number(json.user_info.auth) !== 1) return null;
-    return json;
+    if (!res.ok) return { kind: "unreachable", status: res.status };
+    const text = await res.text();
+    let json: { user_info?: { auth?: number | string; status?: string }; server_info?: Record<string, unknown> };
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return { kind: "unreachable" };
+    }
+    if (!json?.user_info) return { kind: "invalid" };
+    if (Number(json.user_info.auth) !== 1) return { kind: "invalid" };
+    return { kind: "ok", json: json as AttemptOk["json"] };
   } catch {
-    return null;
+    return { kind: "unreachable" };
   }
 }
 
@@ -48,14 +63,16 @@ export const xtreamLogin = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => loginSchema.parse(data))
   .handler(async ({ data }): Promise<LoginResult> => {
     const { username, password } = data;
-    for (const srv of XTREAM_SERVERS) {
-      const json = await tryServer(srv.dns, username, password);
-      if (json?.user_info) {
-        const status = String(json.user_info.status ?? "").toLowerCase();
+    const servers = data.servers && data.servers.length ? data.servers : XTREAM_SERVERS;
+    const issues: { label: string; reason: string }[] = [];
+    for (const srv of servers) {
+      const r = await tryServer(srv.dns, username, password);
+      if (r.kind === "ok") {
+        const status = String(r.json.user_info.status ?? "").toLowerCase();
         if (status && status !== "active") {
           return {
             ok: false,
-            error: `Conta encontrada em ${srv.label}, mas status: ${json.user_info.status}`,
+            error: `Conta encontrada em ${srv.label}, mas status: ${r.json.user_info.status}`,
           };
         }
         return {
@@ -64,12 +81,31 @@ export const xtreamLogin = createServerFn({ method: "POST" })
           dns: srv.dns,
           username,
           password,
-          user_info: json.user_info as unknown as JsonObject,
-          server_info: (json.server_info ?? {}) as unknown as JsonObject,
+          user_info: r.json.user_info as unknown as JsonObject,
+          server_info: (r.json.server_info ?? {}) as unknown as JsonObject,
         };
       }
+      issues.push({
+        label: srv.label,
+        reason:
+          r.kind === "invalid"
+            ? "credenciais inválidas"
+            : r.status
+              ? `servidor indisponível (HTTP ${r.status})`
+              : "servidor fora do ar",
+      });
     }
-    return { ok: false, error: "Usuário ou senha inválidos nos servidores Max e Premium." };
+    const allUnreachable = issues.every(
+      (i) => i.reason.includes("indisponível") || i.reason.includes("fora do ar"),
+    );
+    const detalhe = issues.map((i) => `${i.label}: ${i.reason}`).join(" • ");
+    if (allUnreachable) {
+      return {
+        ok: false,
+        error: `Não foi possível contactar os servidores agora. ${detalhe}. Tente novamente em instantes.`,
+      };
+    }
+    return { ok: false, error: `Usuário ou senha inválidos. (${detalhe})` };
   });
 
 // --- Catalog proxy ---
