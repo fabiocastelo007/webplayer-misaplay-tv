@@ -183,7 +183,7 @@ function TvPage() {
             {/* Bottom panel: categorias + canais */}
             {panelOpen ? (
               <div className="shrink-0 border-t border-white/10 bg-black/85 backdrop-blur">
-                <div className="flex items-center gap-2 overflow-x-auto px-3 py-2">
+                <div className="flex items-center gap-2 overflow-x-auto px-3 py-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
                   <FsCat active={activeCat === "all"} onClick={() => setActiveCat("all")}>
                     Todos
                   </FsCat>
@@ -200,7 +200,7 @@ function TvPage() {
                     </FsCat>
                   ))}
                 </div>
-                <div className="flex gap-2 overflow-x-auto px-3 pb-3 [scrollbar-width:thin]">
+                <div className="flex gap-2 overflow-x-auto px-3 pb-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
                   {filtered.map((ch) => {
                     const active = ch.stream_id === current.stream_id;
                     return (
