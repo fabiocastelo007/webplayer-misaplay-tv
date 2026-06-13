@@ -2,11 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { XTREAM_SERVERS, type XtreamPackage } from "./xtream";
 
-const inputSchema = z.object({
-  username: z.string().trim().min(1).max(120),
-  password: z.string().min(1).max(200),
-});
-
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
 
@@ -22,6 +17,10 @@ export type LoginResult =
     }
   | { ok: false; error: string };
 
+const loginSchema = z.object({
+  username: z.string().trim().min(1).max(120),
+  password: z.string().min(1).max(200),
+});
 
 async function tryServer(dns: string, username: string, password: string) {
   const url = `${dns}/player_api.php?username=${encodeURIComponent(
@@ -46,7 +45,7 @@ async function tryServer(dns: string, username: string, password: string) {
 }
 
 export const xtreamLogin = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .inputValidator((data: unknown) => loginSchema.parse(data))
   .handler(async ({ data }): Promise<LoginResult> => {
     const { username, password } = data;
     for (const srv of XTREAM_SERVERS) {
@@ -54,7 +53,10 @@ export const xtreamLogin = createServerFn({ method: "POST" })
       if (json?.user_info) {
         const status = String(json.user_info.status ?? "").toLowerCase();
         if (status && status !== "active") {
-          return { ok: false, error: `Conta encontrada em ${srv.label}, mas status: ${json.user_info.status}` };
+          return {
+            ok: false,
+            error: `Conta encontrada em ${srv.label}, mas status: ${json.user_info.status}`,
+          };
         }
         return {
           ok: true,
@@ -64,9 +66,42 @@ export const xtreamLogin = createServerFn({ method: "POST" })
           password,
           user_info: json.user_info as unknown as JsonObject,
           server_info: (json.server_info ?? {}) as unknown as JsonObject,
-
         };
       }
     }
     return { ok: false, error: "Usuário ou senha inválidos nos servidores Max e Premium." };
+  });
+
+// --- Catalog proxy ---
+
+const fetchSchema = z.object({
+  dns: z.string().url(),
+  username: z.string().min(1).max(120),
+  password: z.string().min(1).max(200),
+  action: z.string().min(1).max(60),
+  params: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+});
+
+export const xtreamFetch = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => fetchSchema.parse(data))
+  .handler(async ({ data }): Promise<JsonValue> => {
+    const qs = new URLSearchParams({
+      username: data.username,
+      password: data.password,
+      action: data.action,
+    });
+    if (data.params) {
+      for (const [k, v] of Object.entries(data.params)) qs.set(k, String(v));
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(`${data.dns}/player_api.php?${qs.toString()}`, {
+        signal: ctrl.signal,
+      });
+      if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`);
+      return (await res.json()) as JsonValue;
+    } finally {
+      clearTimeout(t);
+    }
   });
