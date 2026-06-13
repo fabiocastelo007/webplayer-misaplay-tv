@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, useRef, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Loader2, Search, Play, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Play, Info, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/catalog/FavoriteButton";
+import { listFavorites, onFavoritesChanged, type FavKind } from "@/lib/favorites";
 import type { Category } from "@/lib/xtream-api";
 
 export type ShowcaseItem = {
@@ -24,8 +26,16 @@ type Props = {
   renderCardBadge?: (item: ShowcaseItem) => ReactNode;
   /** Max number of category rows on the home view. */
   rowLimit?: number;
-  /** Hide the sticky category filter bar (used on home). */
+  /** Hide the sticky category filter bar. */
   hideCategoryBar?: boolean;
+  /** Slot rendered above all rows on the "all" view (e.g. Continue watching). */
+  topSlot?: ReactNode;
+};
+
+const FAV_KIND_MAP: Record<Props["kind"], FavKind> = {
+  vod: "vod",
+  series: "series",
+  live: "live",
 };
 
 export function PrimeShowcase({
@@ -38,14 +48,16 @@ export function PrimeShowcase({
   renderCardBadge,
   rowLimit = 8,
   hideCategoryBar = false,
+  topSlot,
 }: Props) {
+  const favKind = FAV_KIND_MAP[kind];
   const cats = useQuery({
     queryKey: ["xtream", kind, "categories"],
     queryFn: fetchCategories,
     staleTime: 5 * 60_000,
   });
 
-  const [activeCat, setActiveCat] = useState<string | "all">("all");
+  const [activeCat, setActiveCat] = useState<string | "all" | "favorites">("all");
   const [query, setQuery] = useState("");
 
   const featured = useQuery({
@@ -57,10 +69,24 @@ export function PrimeShowcase({
 
   const categoryView = useQuery({
     queryKey: ["xtream", kind, "items", activeCat],
-    queryFn: () => fetchItems(activeCat === "all" ? undefined : activeCat),
-    enabled: activeCat !== "all",
+    queryFn: () => fetchItems(activeCat === "all" ? undefined : (activeCat as string)),
+    enabled: activeCat !== "all" && activeCat !== "favorites",
     staleTime: 60_000,
   });
+
+  // Favorites view
+  const [favVersion, setFavVersion] = useState(0);
+  useEffect(() => onFavoritesChanged(() => setFavVersion((v) => v + 1)), []);
+  const favoriteItems = useMemo<ShowcaseItem[]>(() => {
+    void favVersion;
+    return listFavorites(favKind).map((f) => ({
+      id: f.id,
+      name: f.name,
+      image: f.image ?? "",
+      category_id: "favorites",
+      ext: f.ext,
+    }));
+  }, [favKind, favVersion]);
 
   // Build per-category rows when activeCat = all
   const rows = useMemo(() => {
@@ -91,11 +117,11 @@ export function PrimeShowcase({
 
   const filtered = useMemo(() => {
     if (activeCat === "all") return [];
-    const list = categoryView.data ?? [];
+    const list = activeCat === "favorites" ? favoriteItems : (categoryView.data ?? []);
     const q = query.trim().toLowerCase();
     if (!q) return list;
     return list.filter((i) => i.name.toLowerCase().includes(q));
-  }, [activeCat, categoryView.data, query]);
+  }, [activeCat, categoryView.data, query, favoriteItems]);
 
   return (
     <div>
@@ -114,38 +140,21 @@ export function PrimeShowcase({
 
       {/* Category bar */}
       {!hideCategoryBar ? (
-      <div className="sticky top-[64px] z-20 border-b border-border/40 bg-background/85 backdrop-blur md:top-[60px]">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
-          <button
-            onClick={() => {
-              setActiveCat("all");
-              setQuery("");
-            }}
-            className={
-              "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition " +
-              (activeCat === "all"
-                ? "bg-foreground text-background"
-                : "bg-secondary/60 text-muted-foreground hover:text-foreground")
-            }
-          >
-            Em destaque
-          </button>
-          {cats.data?.map((c) => (
-            <button
-              key={c.category_id}
-              onClick={() => setActiveCat(c.category_id)}
-              className={
-                "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition " +
-                (activeCat === c.category_id
-                  ? "bg-foreground text-background"
-                  : "bg-secondary/60 text-muted-foreground hover:text-foreground")
-              }
-            >
-              {c.category_name}
-            </button>
-          ))}
+        <div className="sticky top-[64px] z-20 border-b border-border/40 bg-background/85 backdrop-blur md:top-[60px]">
+          <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
+            <CatChip active={activeCat === "all"} onClick={() => { setActiveCat("all"); setQuery(""); }}>
+              Em destaque
+            </CatChip>
+            <CatChip active={activeCat === "favorites"} onClick={() => { setActiveCat("favorites"); setQuery(""); }}>
+              <Heart className="size-3.5" /> Favoritos
+            </CatChip>
+            {cats.data?.map((c) => (
+              <CatChip key={c.category_id} active={activeCat === c.category_id} onClick={() => setActiveCat(c.category_id)}>
+                {c.category_name}
+              </CatChip>
+            ))}
+          </div>
         </div>
-      </div>
       ) : null}
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -156,6 +165,18 @@ export function PrimeShowcase({
             <ErrorBox error={featured.error as Error} />
           ) : (
             <div className="space-y-10">
+              {topSlot}
+              {favoriteItems.length > 0 ? (
+                <CategoryRow
+                  title="Os meus favoritos"
+                  items={favoriteItems.slice(0, 18)}
+                  onPlay={onPlay}
+                  onOpen={onOpen}
+                  renderCardBadge={renderCardBadge}
+                  favKind={favKind}
+                  onSeeAll={() => setActiveCat("favorites")}
+                />
+              ) : null}
               {rows.map(({ cat, items }) => (
                 <CategoryRow
                   key={cat.category_id}
@@ -164,10 +185,11 @@ export function PrimeShowcase({
                   onPlay={onPlay}
                   onOpen={onOpen}
                   renderCardBadge={renderCardBadge}
+                  favKind={favKind}
                   onSeeAll={() => setActiveCat(cat.category_id)}
                 />
               ))}
-              {rows.length === 0 ? (
+              {rows.length === 0 && favoriteItems.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível.</p>
               ) : null}
             </div>
@@ -176,29 +198,41 @@ export function PrimeShowcase({
           <>
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-2xl font-bold tracking-tight">
-                {cats.data?.find((c) => c.category_id === activeCat)?.category_name ?? title}
+                {activeCat === "favorites"
+                  ? "Os meus favoritos"
+                  : cats.data?.find((c) => c.category_id === activeCat)?.category_name ?? title}
               </h2>
               <div className="relative max-w-sm flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar nesta categoria..."
+                  placeholder="Buscar..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="h-10 bg-secondary/60 pl-9"
                 />
               </div>
             </div>
-            {categoryView.isLoading ? (
+            {activeCat !== "favorites" && categoryView.isLoading ? (
               <Spinner />
-            ) : categoryView.error ? (
+            ) : activeCat !== "favorites" && categoryView.error ? (
               <ErrorBox error={categoryView.error as Error} />
             ) : filtered.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum título encontrado.</p>
+              <p className="text-sm text-muted-foreground">
+                {activeCat === "favorites"
+                  ? "Ainda não tem favoritos. Toque no ❤ para adicionar."
+                  : "Nenhum título encontrado."}
+              </p>
             ) : (
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {filtered.map((item) => (
                   <li key={String(item.id)}>
-                    <PrimePoster item={item} onPlay={onPlay} onOpen={onOpen} badge={renderCardBadge?.(item)} />
+                    <PrimePoster
+                      item={item}
+                      onPlay={onPlay}
+                      onOpen={onOpen}
+                      badge={renderCardBadge?.(item)}
+                      favKind={favKind}
+                    />
                   </li>
                 ))}
               </ul>
@@ -207,6 +241,20 @@ export function PrimeShowcase({
         )}
       </div>
     </div>
+  );
+}
+
+function CatChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={
+        "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition " +
+        (active ? "bg-foreground text-background" : "bg-secondary/60 text-muted-foreground hover:text-foreground")
+      }
+    >
+      {children}
+    </button>
   );
 }
 
@@ -305,6 +353,7 @@ function CategoryRow({
   onOpen,
   renderCardBadge,
   onSeeAll,
+  favKind,
 }: {
   title: string;
   items: ShowcaseItem[];
@@ -312,6 +361,7 @@ function CategoryRow({
   onOpen?: (i: ShowcaseItem) => void;
   renderCardBadge?: (i: ShowcaseItem) => ReactNode;
   onSeeAll: () => void;
+  favKind: FavKind;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) => {
@@ -341,7 +391,7 @@ function CategoryRow({
         >
           {items.map((it) => (
             <div key={String(it.id)} className="w-[150px] shrink-0 snap-start sm:w-[170px]">
-              <PrimePoster item={it} onPlay={onPlay} onOpen={onOpen} badge={renderCardBadge?.(it)} />
+              <PrimePoster item={it} onPlay={onPlay} onOpen={onOpen} badge={renderCardBadge?.(it)} favKind={favKind} />
             </div>
           ))}
         </div>
@@ -362,11 +412,13 @@ export function PrimePoster({
   onPlay,
   onOpen,
   badge,
+  favKind,
 }: {
   item: ShowcaseItem;
   onPlay: (i: ShowcaseItem) => void;
   onOpen?: (i: ShowcaseItem) => void;
   badge?: ReactNode;
+  favKind?: FavKind;
 }) {
   const [broken, setBroken] = useState(false);
   return (
@@ -400,14 +452,17 @@ export function PrimePoster({
           </div>
         </div>
       </button>
+      {favKind ? (
+        <div className="absolute right-2 top-2 z-10">
+          <FavoriteButton
+            kind={favKind}
+            item={{ id: String(item.id), name: item.name, image: item.image, ext: item.ext }}
+          />
+        </div>
+      ) : null}
       <div className="p-2">
         <p className="line-clamp-2 text-xs font-medium leading-snug">{item.name}</p>
       </div>
     </div>
   );
-}
-
-// Keep a small hook used in mobile-stuck horizontal lists.
-export function useStableEffect(fn: () => void, deps: unknown[]) {
-  useEffect(fn, deps); // eslint-disable-line react-hooks/exhaustive-deps
 }
