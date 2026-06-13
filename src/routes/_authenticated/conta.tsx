@@ -118,7 +118,10 @@ function ContaPage() {
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       {p.label}
                     </span>
-                    <span className="mt-2 text-3xl font-extrabold">{formatKz(p.price)}</span>
+                    <span className="mt-2 text-3xl font-extrabold">
+                      {new Intl.NumberFormat("pt-PT").format(p.price)}
+                      <span className="ml-1 text-base font-semibold text-muted-foreground">Kz</span>
+                    </span>
                     <span className="mt-1 text-xs text-muted-foreground">
                       {p.months} {p.months === 1 ? "mês" : "meses"} de acesso
                     </span>
