@@ -388,6 +388,7 @@ function CategoryRow({
   onSeeAll: () => void;
   favKind: FavKind;
 }) {
+  useBrokenVersion();
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) => {
     const el = scrollRef.current;
