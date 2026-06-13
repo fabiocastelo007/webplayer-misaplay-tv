@@ -74,7 +74,17 @@ export function PrimeShowcase({
       .slice(0, rowLimit);
   }, [activeCat, cats.data, featured.data, rowLimit]);
 
-  const hero = featured.data?.find((i) => !!i.image) ?? featured.data?.[0];
+  const heroPool = useMemo(
+    () => (featured.data ?? []).filter((i) => !!i.image).slice(0, 5),
+    [featured.data],
+  );
+  const [heroIdx, setHeroIdx] = useState(0);
+  useEffect(() => {
+    if (heroPool.length < 2) return;
+    const t = setInterval(() => setHeroIdx((i) => (i + 1) % heroPool.length), 6000);
+    return () => clearInterval(t);
+  }, [heroPool.length]);
+  const hero = heroPool[heroIdx] ?? featured.data?.[0];
 
   const filtered = useMemo(() => {
     if (activeCat === "all") return [];
