@@ -1,4 +1,5 @@
-// Favoritos por tipo (vod/series/live). LocalStorage only.
+// Favoritos por tipo (vod/series/live). LocalStorage por perfil.
+import { getActiveProfileId } from "./profiles";
 
 export type FavKind = "vod" | "series" | "live";
 
@@ -11,13 +12,18 @@ export type FavoriteItem = {
   addedAt: number;
 };
 
-const KEY = "misaplay_favorites";
+const BASE = "misaplay_favorites";
 const EVT = "misaplay-favorites-changed";
+
+function key() {
+  const pid = getActiveProfileId();
+  return pid ? `${BASE}__${pid}` : BASE;
+}
 
 export function listFavorites(kind?: FavKind): FavoriteItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key());
     const list = raw ? (JSON.parse(raw) as FavoriteItem[]) : [];
     return kind ? list.filter((f) => f.kind === kind) : list;
   } catch {
@@ -26,7 +32,7 @@ export function listFavorites(kind?: FavKind): FavoriteItem[] {
 }
 
 function save(list: FavoriteItem[]) {
-  localStorage.setItem(KEY, JSON.stringify(list));
+  localStorage.setItem(key(), JSON.stringify(list));
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
@@ -53,8 +59,10 @@ export function onFavoritesChanged(cb: () => void) {
   const h = () => cb();
   window.addEventListener(EVT, h);
   window.addEventListener("storage", h);
+  window.addEventListener("misaplay-profiles-changed", h);
   return () => {
     window.removeEventListener(EVT, h);
     window.removeEventListener("storage", h);
+    window.removeEventListener("misaplay-profiles-changed", h);
   };
 }
