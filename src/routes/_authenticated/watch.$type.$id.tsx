@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, Download, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -71,24 +71,19 @@ function WatchPage() {
           <p className="text-sm text-destructive">Conteúdo inválido.</p>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {canDownload ? (
+        {canDownload ? (
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button onClick={handleDownload} variant="secondary">
               <Download className="size-4" /> Baixar para assistir offline
             </Button>
-          ) : null}
-          <Button asChild variant="ghost">
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-4" /> Abrir num leitor externo
-            </a>
-          </Button>
-        </div>
+          </div>
+        ) : null}
 
-        <p className="mt-4 text-xs text-muted-foreground">
-          {canDownload
-            ? "O ficheiro é entregue directamente pelo servidor. Tempo depende da sua ligação."
-            : "Canais ao vivo não são suportados para download offline."}
-        </p>
+        {canDownload ? (
+          <p className="mt-4 text-xs text-muted-foreground">
+            O ficheiro é entregue directamente pelo servidor. Tempo depende da sua ligação.
+          </p>
+        ) : null}
       </div>
       <Footer />
     </main>
