@@ -239,7 +239,7 @@ function M3UImportButton({ onLoaded }: { onLoaded: (count: number) => void }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="mt-3 h-11 w-full" type="button">
-          <ListVideo className="size-4" /> Importar lista M3U (Pacote Max offline)
+          <ListVideo className="size-4" /> Importar lista
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
