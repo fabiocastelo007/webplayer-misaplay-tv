@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { clearSession } from "@/lib/xtream";
 import { PlayCircle, LogOut, Film, Tv, Trophy, Clapperboard } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -9,12 +9,17 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function Home() {
   const navigate = useNavigate();
-  const { user } = Route.useRouteContext();
+  const { session } = Route.useRouteContext() as { session: ReturnType<typeof import("@/lib/xtream").loadSession> };
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
+  function handleSignOut() {
+    clearSession();
     navigate({ to: "/auth", replace: true });
   }
+
+  const pkgLabel = session?.package === "MAX" ? "Pacote Max" : "Pacote Premium";
+  const expIso = session?.user_info?.exp_date
+    ? new Date(Number(session.user_info.exp_date) * 1000).toLocaleDateString("pt-BR")
+    : null;
 
   return (
     <main className="min-h-screen">
@@ -27,7 +32,9 @@ function Home() {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
+          <span className="hidden text-sm text-muted-foreground sm:inline">
+            {session?.username} · {pkgLabel}
+          </span>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="size-4" /> Sair
           </Button>
@@ -37,7 +44,11 @@ function Home() {
       <section className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Bem-vindo ao Web Player</h1>
         <p className="mt-4 text-base text-muted-foreground">
-          Você está autenticado. Em breve: catálogo de filmes, séries, TV ao vivo e esportes.
+          Conectado em <strong className="text-foreground">{pkgLabel}</strong>
+          {expIso ? <> · expira em {expIso}</> : null}.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Em breve: catálogo de filmes, séries, TV ao vivo e esportes.
         </p>
 
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
