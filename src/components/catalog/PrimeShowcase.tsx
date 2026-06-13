@@ -459,7 +459,7 @@ export function PrimePoster({
             src={item.image}
             alt={item.name}
             loading="lazy"
-            onError={() => setBroken(true)}
+            onError={() => { markBroken(item.image); setBroken(true); }}
             className="h-full w-full object-cover transition group-hover/card:scale-105"
           />
           {badge ? <div className="absolute left-2 top-2">{badge}</div> : null}
