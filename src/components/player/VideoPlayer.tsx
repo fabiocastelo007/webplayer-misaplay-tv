@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
 
 type Props = {
   src: string;
@@ -24,11 +24,14 @@ export function VideoPlayer({ src, poster, hls }: Props) {
     let instance: Hls | null = null;
 
     if (isHls && !video.canPlayType("application/vnd.apple.mpegurl") && Hls.isSupported()) {
-      instance = new Hls({ enableWorker: true });
+      instance = new Hls({ enableWorker: true, lowLatencyMode: false });
       instance.loadSource(src);
       instance.attachMedia(video);
       instance.on(Hls.Events.ERROR, (_e, data) => {
-        if (data.fatal) setError(`Falha no stream (${data.type}).`);
+        if (data.fatal) {
+          setLoading(false);
+          setError(`Falha no stream (${data.type}${data.details ? " · " + data.details : ""}).`);
+        }
       });
     } else {
       video.src = src;
@@ -37,7 +40,7 @@ export function VideoPlayer({ src, poster, hls }: Props) {
     const onLoaded = () => setLoading(false);
     const onError = () => {
       setLoading(false);
-      setError("Não foi possível carregar o vídeo.");
+      setError("Não foi possível carregar o vídeo neste navegador.");
     };
     video.addEventListener("loadeddata", onLoaded);
     video.addEventListener("error", onError);
@@ -70,11 +73,20 @@ export function VideoPlayer({ src, poster, hls }: Props) {
         </div>
       ) : null}
       {error ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 p-6 text-center text-sm text-white">
-          <p>{error}</p>
-          <p className="text-xs text-white/70">
-            Alguns servidores bloqueiam navegadores. Tente em outro pacote/navegador.
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/85 p-6 text-center text-sm text-white">
+          <p className="font-medium">{error}</p>
+          <p className="max-w-md text-xs text-white/70">
+            Alguns canais ao vivo bloqueiam reprodução directa no navegador.
+            Abra o link num leitor externo como VLC ou MX Player.
           </p>
+          <a
+            href={src}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-black"
+          >
+            <ExternalLink className="size-4" /> Abrir num leitor externo
+          </a>
         </div>
       ) : null}
     </div>

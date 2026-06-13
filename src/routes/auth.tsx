@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
@@ -7,17 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, PlayCircle, Tv } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import postersBg from "@/assets/posters-bg.jpg";
+import { Logo } from "@/components/Logo";
+import { BRAND } from "@/lib/config";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Acessar — Misaplay Web Player" },
-      { name: "description", content: "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e esportes." },
-      { property: "og:title", content: "Acessar — Misaplay Web Player" },
-      { property: "og:description", content: "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e esportes." },
+      { title: "Acessar — Misaplay TV" },
+      { name: "description", content: "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e desporto." },
+      { property: "og:title", content: "Acessar — Misaplay TV" },
+      { property: "og:description", content: "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e desporto." },
     ],
   }),
   beforeLoad: () => {
@@ -82,22 +84,21 @@ function AuthPage() {
       </div>
 
       <header className="relative z-10 flex items-center justify-between px-6 py-5 sm:px-10">
-        <Link to="/auth" className="flex items-center gap-2">
-          <PlayCircle className="size-7 text-accent" aria-hidden />
-          <span className="text-xl font-bold tracking-tight">
-            <span className="brand-gradient-text">Misa</span>
-            <span className="text-foreground">play</span>
-          </span>
-        </Link>
-        <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
-          <Tv className="size-4" aria-hidden />
-          Web Player
-        </div>
+        <Logo className="h-10 w-auto" />
+        <a
+          href={`https://wa.me/${BRAND.whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
+        >
+          Suporte: {BRAND.phone}
+        </a>
       </header>
 
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-100px)] max-w-md items-center justify-center px-6 pb-12">
         <div className="glass-card w-full rounded-2xl p-8 sm:p-10">
           <div className="mb-7 text-center">
+            <Logo className="mx-auto mb-4 h-14 w-auto" />
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">BEM-VINDO</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Acesse com seu usuário e senha. Validamos automaticamente nos servidores Max e Premium.
@@ -145,7 +146,15 @@ function AuthPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Servidores: Pacote Max e Pacote Premium
+            Não tem conta? Fale connosco no WhatsApp{" "}
+            <a
+              href={`https://wa.me/${BRAND.whatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-primary hover:underline"
+            >
+              {BRAND.phone}
+            </a>
           </p>
         </div>
       </section>

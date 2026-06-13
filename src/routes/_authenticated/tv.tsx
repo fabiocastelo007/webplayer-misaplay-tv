@@ -1,19 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppHeader } from "@/components/AppHeader";
-import { CatalogBrowser, PosterCard } from "@/components/catalog/CatalogBrowser";
+import { Footer } from "@/components/Footer";
+import { PrimeShowcase, type ShowcaseItem } from "@/components/catalog/PrimeShowcase";
 import { xtream, type LiveStream } from "@/lib/xtream-api";
 
 export const Route = createFileRoute("/_authenticated/tv")({
-  head: () => ({ meta: [{ title: "TV ao Vivo — Misaplay" }] }),
+  head: () => ({ meta: [{ title: "TV ao Vivo — Misaplay TV" }] }),
   component: TvPage,
 });
 
 function TvPage() {
   const navigate = useNavigate();
+  const play = (item: ShowcaseItem) =>
+    navigate({
+      to: "/watch/$type/$id",
+      params: { type: "live", id: String(item.id) },
+      search: { ext: "m3u8", title: item.name },
+    });
   return (
     <main className="min-h-screen">
       <AppHeader />
-      <CatalogBrowser
+      <PrimeShowcase
         title="TV ao Vivo"
         kind="live"
         fetchCategories={() => xtream.liveCategories()}
@@ -26,22 +33,14 @@ function TvPage() {
             category_id: v.category_id,
           }));
         }}
-        renderCard={(item) => (
-          <button
-            type="button"
-            className="block w-full text-left"
-            onClick={() =>
-              navigate({
-                to: "/watch/$type/$id",
-                params: { type: "live", id: String(item.id) },
-                search: { ext: "m3u8", title: item.name },
-              })
-            }
-          >
-            <PosterCard name={item.name} image={item.image} badge="Ao vivo" />
-          </button>
+        onPlay={play}
+        renderCardBadge={() => (
+          <span className="rounded bg-emerald-500/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+            Ao vivo
+          </span>
         )}
       />
+      <Footer />
     </main>
   );
 }
