@@ -1,4 +1,9 @@
 // Perfis locais (até 2). Cada perfil isola favoritos e histórico.
+// Os perfis são guardados POR USUÁRIO (username Xtream/M3U) para que cada
+// conta veja apenas os seus próprios perfis.
+
+import { loadSession } from "./xtream";
+import { loadM3USession } from "./m3u";
 
 export type Profile = {
   id: string;
@@ -8,10 +13,26 @@ export type Profile = {
   createdAt: number;
 };
 
-const PROFILES_KEY = "misaplay_profiles";
-const ACTIVE_KEY = "misaplay_active_profile";
+function currentUserKey(): string {
+  if (typeof window === "undefined") return "_anon";
+  try {
+    const s = loadSession();
+    if (s?.username) return `x:${s.username}`;
+    const m = loadM3USession();
+    if (m?.username) return `m:${m.username}`;
+    if (m?.source) return `m:${m.source}`;
+  } catch { /* ignore */ }
+  return "_anon";
+}
+
+const PROFILES_PREFIX = "misaplay_profiles__";
+const ACTIVE_PREFIX = "misaplay_active_profile__";
 const EVT = "misaplay-profiles-changed";
 export const MAX_PROFILES = 2;
+
+function profilesKey() { return PROFILES_PREFIX + currentUserKey(); }
+function activeKey() { return ACTIVE_PREFIX + currentUserKey(); }
+
 
 const DEFAULT_AVATARS = ["🦸", "👩", "🧑", "👦", "👧", "🐱", "🐶", "🦊"];
 
@@ -24,7 +45,7 @@ export function defaultAvatarFor(name: string): string {
 export function listProfiles(): Profile[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(PROFILES_KEY);
+    const raw = localStorage.getItem(profilesKey());
     return raw ? (JSON.parse(raw) as Profile[]) : [];
   } catch {
     return [];
@@ -32,7 +53,7 @@ export function listProfiles(): Profile[] {
 }
 
 function persist(list: Profile[]) {
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(list));
+  localStorage.setItem(profilesKey(), JSON.stringify(list));
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
@@ -68,7 +89,7 @@ export function deleteProfile(id: string) {
 
 export function getActiveProfileId(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(ACTIVE_KEY);
+  return localStorage.getItem(activeKey());
 }
 
 export function getActiveProfile(): Profile | null {
@@ -79,13 +100,13 @@ export function getActiveProfile(): Profile | null {
 
 export function setActiveProfile(id: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(ACTIVE_KEY, id);
+  localStorage.setItem(activeKey(), id);
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
 export function clearActiveProfile() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(ACTIVE_KEY);
+  localStorage.removeItem(activeKey());
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
