@@ -99,8 +99,21 @@ export const xtreamFetch = createServerFn({ method: "POST" })
       const res = await fetch(`${data.dns}/player_api.php?${qs.toString()}`, {
         signal: ctrl.signal,
       });
-      if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`);
-      return (await res.json()) as JsonValue;
+      if (!res.ok) {
+        console.warn(`[xtreamFetch] ${data.action} -> HTTP ${res.status}`);
+        return [];
+      }
+      const text = await res.text();
+      if (!text) return [];
+      try {
+        return JSON.parse(text) as JsonValue;
+      } catch {
+        console.warn(`[xtreamFetch] ${data.action} -> resposta não-JSON`);
+        return [];
+      }
+    } catch (e) {
+      console.warn(`[xtreamFetch] ${data.action} -> erro de rede`, e);
+      return [];
     } finally {
       clearTimeout(t);
     }
