@@ -98,7 +98,15 @@ export function PrimeShowcase({
     <div>
       {/* HERO */}
       {activeCat === "all" && hero ? (
-        <HeroBanner item={hero} title={title} onPlay={onPlay} onOpen={onOpen} />
+        <HeroBanner
+          item={hero}
+          title={title}
+          onPlay={onPlay}
+          onOpen={onOpen}
+          dots={heroPool.length}
+          activeDot={heroIdx}
+          onDot={setHeroIdx}
+        />
       ) : null}
 
       {/* Category bar */}
