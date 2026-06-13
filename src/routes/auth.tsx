@@ -40,10 +40,13 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const result = await login({ data: { username: username.trim(), password } });
+      const { loadSettings } = await import("@/lib/settings");
+      const servers = loadSettings().servers;
+      const result = await login({ data: { username: username.trim(), password, servers } });
       if (!result.ok) {
         toast.error(result.error);
         return;
+      }
       }
       saveSession({
         package: result.package as XtreamPackage,
