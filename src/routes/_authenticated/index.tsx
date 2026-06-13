@@ -132,7 +132,7 @@ function Home() {
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {(series.data ?? []).slice(0, 24).map((s: Serie) => (
+            {(series.data ?? []).filter((s: Serie) => !!s.cover).slice(0, 24).map((s: Serie) => (
               <Link
                 key={s.series_id}
                 to="/serie/$id"
