@@ -62,8 +62,9 @@ export const xtreamLogin = createServerFn({ method: "POST" })
           dns: srv.dns,
           username,
           password,
-          user_info: json.user_info as Record<string, unknown>,
-          server_info: (json.server_info ?? {}) as Record<string, unknown>,
+          user_info: json.user_info as unknown as JsonObject,
+          server_info: (json.server_info ?? {}) as unknown as JsonObject,
+
         };
       }
     }
