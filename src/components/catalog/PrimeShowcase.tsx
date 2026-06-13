@@ -423,6 +423,7 @@ export function PrimePoster({
   favKind?: FavKind;
 }) {
   const [broken, setBroken] = useState(false);
+  if (!item.image || broken) return null;
   return (
     <div className="group/card relative overflow-hidden rounded-lg bg-secondary/50 ring-1 ring-border/40 transition hover:ring-primary">
       <button
@@ -431,19 +432,13 @@ export function PrimePoster({
         className="block w-full text-left"
       >
         <div className="relative aspect-[2/3] w-full bg-gradient-to-br from-secondary to-secondary/40">
-          {item.image && !broken ? (
-            <img
-              src={item.image}
-              alt={item.name}
-              loading="lazy"
-              onError={() => setBroken(true)}
-              className="h-full w-full object-cover transition group-hover/card:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center p-2 text-center text-xs text-muted-foreground">
-              {item.name}
-            </div>
-          )}
+          <img
+            src={item.image}
+            alt={item.name}
+            loading="lazy"
+            onError={() => setBroken(true)}
+            className="h-full w-full object-cover transition group-hover/card:scale-105"
+          />
           {badge ? <div className="absolute left-2 top-2">{badge}</div> : null}
           <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 transition group-hover/card:opacity-100">
             <div className="w-full p-2">
