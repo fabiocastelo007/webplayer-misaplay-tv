@@ -1,5 +1,6 @@
 import { xtreamFetch } from "./xtream.functions";
 import { loadSession } from "./xtream";
+import { loadM3USession } from "./m3u";
 
 export type Category = { category_id: string; category_name: string; parent_id: number };
 
@@ -68,9 +69,29 @@ async function call<T>(action: string, params?: Record<string, string | number>)
 }
 
 export const xtream = {
-  liveCategories: () => call<Category[]>("get_live_categories"),
-  liveStreams: (category_id?: string) =>
-    call<LiveStream[]>("get_live_streams", category_id ? { category_id } : undefined),
+  liveCategories: async (): Promise<Category[]> => {
+    const m = loadM3USession();
+    if (m) {
+      const names = Array.from(new Set(m.channels.map((c) => c.category_id)));
+      return names.map((n) => ({ category_id: n, category_name: n, parent_id: 0 }));
+    }
+    return call<Category[]>("get_live_categories");
+  },
+  liveStreams: async (category_id?: string): Promise<LiveStream[]> => {
+    const m = loadM3USession();
+    if (m) {
+      const all: LiveStream[] = m.channels.map((c) => ({
+        num: c.stream_id,
+        name: c.name,
+        stream_type: "live",
+        stream_id: c.stream_id,
+        stream_icon: c.stream_icon,
+        category_id: c.category_id,
+      }));
+      return category_id ? all.filter((s) => s.category_id === category_id) : all;
+    }
+    return call<LiveStream[]>("get_live_streams", category_id ? { category_id } : undefined);
+  },
   vodCategories: () => call<Category[]>("get_vod_categories"),
   vodStreams: (category_id?: string) =>
     call<VodStream[]>("get_vod_streams", category_id ? { category_id } : undefined),
@@ -82,6 +103,11 @@ export const xtream = {
 
 // Stream URL builders. dns + creds come from session.
 export function liveStreamUrl(stream_id: number) {
+  const m = loadM3USession();
+  if (m) {
+    const ch = m.channels.find((c) => c.stream_id === stream_id);
+    if (ch) return ch.url;
+  }
   const { dns, username, password } = creds();
   return `${dns}/live/${encodeURIComponent(username)}/${encodeURIComponent(password)}/${stream_id}.m3u8`;
 }
