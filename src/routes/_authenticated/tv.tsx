@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Search, X, Heart, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Search, Heart, Maximize2, Tv } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { Footer } from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { FavoriteButton } from "@/components/catalog/FavoriteButton";
@@ -33,8 +32,9 @@ function TvPage() {
     staleTime: 60_000,
   });
   const [query, setQuery] = useState("");
+  const [current, setCurrent] = useState<LiveStream | null>(null);
+  const playerWrapRef = useRef<HTMLDivElement>(null);
 
-  // Favorites change tick to re-evaluate filter
   const [favTick, setFavTick] = useState(0);
   useEffect(() => onFavoritesChanged(() => setFavTick((v) => v + 1)), []);
 
@@ -49,14 +49,8 @@ function TvPage() {
     return q ? list.filter((c) => c.name.toLowerCase().includes(q)) : list;
   }, [streams.data, query, activeCat, favTick]);
 
-  const [current, setCurrent] = useState<LiveStream | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const openChannel = async (ch: LiveStream) => {
-    setCurrent(ch);
-    setPanelOpen(false);
-    const el = containerRef.current;
+  const goFullscreen = async () => {
+    const el = playerWrapRef.current;
     if (el && !document.fullscreenElement) {
       try {
         await el.requestFullscreen();
@@ -66,182 +60,158 @@ function TvPage() {
     }
   };
 
-  useEffect(() => {
-    const onFsChange = () => {
-      if (!document.fullscreenElement) {
-        setCurrent(null);
-      }
-    };
-    document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
-  }, []);
+  const openChannel = (ch: LiveStream) => {
+    setCurrent(ch);
+  };
 
   return (
     <main className="min-h-screen">
       <AppHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <h1 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">TV ao Vivo</h1>
+      <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4">
+        <h1 className="mb-3 text-xl font-bold tracking-tight sm:text-2xl">TV ao Vivo</h1>
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex gap-2 overflow-x-auto">
-            <CatBtn active={activeCat === "all"} onClick={() => setActiveCat("all")}>Todos</CatBtn>
-            <CatBtn active={activeCat === FAV_CAT} onClick={() => setActiveCat(FAV_CAT)}>
-              <Heart className="mr-1 inline size-3.5" /> Favoritos
-            </CatBtn>
-            {cats.data?.map((c) => (
-              <CatBtn
-                key={c.category_id}
-                active={activeCat === c.category_id}
-                onClick={() => setActiveCat(c.category_id)}
-              >
-                {c.category_name}
-              </CatBtn>
-            ))}
-          </div>
-          <div className="relative max-w-sm flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar canal..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="h-10 bg-secondary/60 pl-9"
-            />
-          </div>
-        </div>
+        <div className="grid gap-3 lg:grid-cols-[200px_280px_minmax(0,1fr)]">
+          {/* Categories column */}
+          <aside className="rounded-xl bg-secondary/40 ring-1 ring-border/40">
+            <div className="max-h-[70vh] overflow-y-auto py-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+              <CatRow active={activeCat === "all"} onClick={() => setActiveCat("all")}>
+                <Tv className="size-3.5" /> Todos
+              </CatRow>
+              <CatRow active={activeCat === FAV_CAT} onClick={() => setActiveCat(FAV_CAT)}>
+                <Heart className="size-3.5" /> Favoritos
+              </CatRow>
+              {cats.data?.map((c) => (
+                <CatRow
+                  key={c.category_id}
+                  active={activeCat === c.category_id}
+                  onClick={() => setActiveCat(c.category_id)}
+                >
+                  {c.category_name}
+                </CatRow>
+              ))}
+            </div>
+          </aside>
 
-        {streams.isLoading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Carregando canais...
-          </div>
-        ) : filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {activeCat === FAV_CAT ? "Sem canais favoritos. Toque no ❤ para adicionar." : "Nenhum canal encontrado."}
-          </p>
-        ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {filtered.map((ch) => (
-              <li key={ch.stream_id}>
-                <ChannelCard ch={ch} onPlay={openChannel} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Fullscreen player: video on top, categories+channels strip below */}
-      <div
-        ref={containerRef}
-        className={
-          current
-            ? "fixed inset-0 z-50 flex flex-col bg-black"
-            : "pointer-events-none fixed inset-0 z-50 hidden"
-        }
-      >
-        {current ? (
-          <>
-            {/* Player area */}
-            <div className="relative flex-1 min-h-0">
-              <div className="absolute inset-0">
-                <VideoPlayer src={liveStreamUrl(current.stream_id)} hls poster={current.stream_icon} />
-              </div>
-
-              {/* Top bar */}
-              <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 bg-gradient-to-b from-black/80 to-transparent p-4">
-                <div className="flex min-w-0 items-center gap-3 text-white">
-                  {current.stream_icon ? (
-                    <img src={current.stream_icon} alt="" className="h-8 w-8 rounded object-contain" />
-                  ) : null}
-                  <span className="truncate font-semibold">{current.name}</span>
-                  <FavoriteButton
-                    kind="live"
-                    item={{ id: String(current.stream_id), name: current.name, image: current.stream_icon }}
-                    className="ml-1"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPanelOpen((p) => !p)}
-                    className="inline-flex items-center gap-2 rounded-md bg-white/15 px-3 py-2 text-xs font-semibold text-white backdrop-blur hover:bg-white/25"
-                  >
-                    {panelOpen ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
-                    Canais
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-                      setCurrent(null);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-md bg-white/15 px-3 py-2 text-xs font-semibold text-white backdrop-blur hover:bg-white/25"
-                  >
-                    <X className="size-4" /> Fechar
-                  </button>
-                </div>
+          {/* Channels column */}
+          <section className="rounded-xl bg-secondary/40 ring-1 ring-border/40">
+            <div className="border-b border-border/40 p-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar canal..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-9 bg-background/60 pl-8 text-sm"
+                />
               </div>
             </div>
-
-            {/* Bottom panel: categorias + canais */}
-            {panelOpen ? (
-              <div className="shrink-0 border-t border-white/10 bg-black/85 backdrop-blur">
-                <div className="flex items-center gap-2 overflow-x-auto px-3 py-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-                  <FsCat active={activeCat === "all"} onClick={() => setActiveCat("all")}>
-                    Todos
-                  </FsCat>
-                  <FsCat active={activeCat === FAV_CAT} onClick={() => setActiveCat(FAV_CAT)}>
-                    <Heart className="mr-1 inline size-3" /> Favoritos
-                  </FsCat>
-                  {cats.data?.map((c) => (
-                    <FsCat
-                      key={c.category_id}
-                      active={activeCat === c.category_id}
-                      onClick={() => setActiveCat(c.category_id)}
-                    >
-                      {c.category_name}
-                    </FsCat>
-                  ))}
-                </div>
-                <div className="flex gap-2 overflow-x-auto px-3 pb-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-                  {filtered.map((ch) => {
-                    const active = ch.stream_id === current.stream_id;
-                    return (
+            <ul className="max-h-[calc(70vh-56px)] overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+              {streams.isLoading ? (
+                <li className="flex items-center gap-2 px-3 py-4 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" /> Carregando...
+                </li>
+              ) : filtered.length === 0 ? (
+                <li className="px-3 py-4 text-sm text-muted-foreground">
+                  {activeCat === FAV_CAT ? "Sem favoritos." : "Nenhum canal."}
+                </li>
+              ) : (
+                filtered.map((ch) => {
+                  const active = current?.stream_id === ch.stream_id;
+                  return (
+                    <li key={ch.stream_id}>
                       <button
-                        key={ch.stream_id}
-                        onClick={() => setCurrent(ch)}
+                        onClick={() => openChannel(ch)}
                         className={
-                          "group/ch relative flex w-[120px] shrink-0 flex-col items-center gap-1 rounded-md p-2 text-white transition " +
-                          (active ? "bg-white/20 ring-1 ring-white/60" : "bg-white/5 hover:bg-white/15")
+                          "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition " +
+                          (active
+                            ? "bg-primary/15 font-semibold text-primary ring-1 ring-primary/60"
+                            : "hover:bg-secondary")
                         }
                       >
-                        <div className="flex h-12 w-full items-center justify-center">
+                        <span className="flex min-w-0 items-center gap-2">
                           {ch.stream_icon ? (
-                            <img src={ch.stream_icon} alt="" className="max-h-12 max-w-full object-contain" />
+                            <img
+                              src={ch.stream_icon}
+                              alt=""
+                              loading="lazy"
+                              className="h-6 w-6 shrink-0 rounded object-contain"
+                            />
                           ) : (
-                            <span className="text-[10px]">{ch.name}</span>
+                            <Tv className="size-4 shrink-0 text-muted-foreground" />
                           )}
-                        </div>
-                        <span className="line-clamp-2 text-center text-[10px] leading-tight">{ch.name}</span>
-                        {isFavorite("live", ch.stream_id) ? (
-                          <Heart className="absolute right-1 top-1 size-3 fill-red-500 text-red-500" />
-                        ) : null}
+                          <span className="truncate">{ch.name}</span>
+                        </span>
+                        <FavoriteButton
+                          kind="live"
+                          item={{ id: String(ch.stream_id), name: ch.name, image: ch.stream_icon }}
+                          className="!bg-transparent !p-0 !text-muted-foreground hover:!text-foreground"
+                        />
                       </button>
-                    );
-                  })}
-                  {filtered.length === 0 ? (
-                    <p className="px-2 py-4 text-xs text-white/60">Sem canais nesta categoria.</p>
-                  ) : null}
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </section>
+
+          {/* Player column */}
+          <section className="min-w-0">
+            <div
+              ref={playerWrapRef}
+              className="relative aspect-video w-full overflow-hidden rounded-xl bg-black ring-1 ring-border/40"
+            >
+              {current ? (
+                <>
+                  <VideoPlayer
+                    src={liveStreamUrl(current.stream_id)}
+                    hls
+                    poster={current.stream_icon}
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
+                    <div className="pointer-events-auto flex min-w-0 items-center gap-2 text-white">
+                      {current.stream_icon ? (
+                        <img src={current.stream_icon} alt="" className="h-7 w-7 rounded object-contain" />
+                      ) : null}
+                      <span className="truncate text-sm font-semibold">{current.name}</span>
+                    </div>
+                    <button
+                      onClick={goFullscreen}
+                      className="pointer-events-auto inline-flex items-center gap-1.5 rounded-md bg-white/15 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-white/25"
+                    >
+                      <Maximize2 className="size-3.5" /> Tela cheia
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <Tv className="size-10 opacity-50" />
+                  <p className="text-sm">Selecione um canal para começar</p>
                 </div>
+              )}
+            </div>
+            {current ? (
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-secondary/40 px-3 py-2 ring-1 ring-border/40">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500">
+                    <span className="size-1.5 animate-pulse rounded-full bg-red-500" /> Ao vivo
+                  </span>
+                  <span className="truncate text-sm font-medium">{current.name}</span>
+                </div>
+                <FavoriteButton
+                  kind="live"
+                  item={{ id: String(current.stream_id), name: current.name, image: current.stream_icon }}
+                />
               </div>
             ) : null}
-          </>
-        ) : null}
+          </section>
+        </div>
       </div>
-
-      <Footer />
     </main>
   );
 }
 
-function CatBtn({
+function CatRow({
   active,
   onClick,
   children,
@@ -254,66 +224,13 @@ function CatBtn({
     <button
       onClick={onClick}
       className={
-        "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition " +
+        "flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition " +
         (active
-          ? "bg-foreground text-background"
-          : "bg-secondary/60 text-muted-foreground hover:text-foreground")
+          ? "bg-primary/15 font-semibold text-primary"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground")
       }
     >
       {children}
     </button>
-  );
-}
-
-function FsCat({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={
-        "shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition " +
-        (active ? "bg-white text-black" : "bg-white/10 text-white/80 hover:bg-white/20")
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
-function ChannelCard({ ch, onPlay }: { ch: LiveStream; onPlay: (c: LiveStream) => void }) {
-  return (
-    <div className="group relative">
-      <button
-        onClick={() => onPlay(ch)}
-        className="flex w-full flex-col items-center gap-2 rounded-lg bg-secondary/50 p-3 ring-1 ring-border/40 transition hover:ring-primary"
-      >
-        <div className="flex aspect-square w-full items-center justify-center rounded bg-background/50 p-2">
-          {ch.stream_icon ? (
-            <img
-              src={ch.stream_icon}
-              alt={ch.name}
-              loading="lazy"
-              className="max-h-full max-w-full object-contain"
-            />
-          ) : (
-            <span className="text-xs text-muted-foreground">{ch.name}</span>
-          )}
-        </div>
-        <span className="line-clamp-2 text-center text-xs font-medium">{ch.name}</span>
-      </button>
-      <div className="absolute right-2 top-2">
-        <FavoriteButton
-          kind="live"
-          item={{ id: String(ch.stream_id), name: ch.name, image: ch.stream_icon }}
-        />
-      </div>
-    </div>
   );
 }
