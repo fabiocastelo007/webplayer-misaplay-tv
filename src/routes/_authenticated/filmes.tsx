@@ -16,7 +16,7 @@ function FilmesPage() {
     navigate({
       to: "/watch/$type/$id",
       params: { type: "movie", id: String(item.id) },
-      search: { ext, title: item.name },
+      search: { ext, title: item.name, image: item.image },
     });
   };
   return (
@@ -25,6 +25,7 @@ function FilmesPage() {
       <PrimeShowcase
         title="Filmes"
         kind="vod"
+        hideCategoryBar
         fetchCategories={() => xtream.vodCategories()}
         fetchItems={async (cat) => {
           const list = await xtream.vodStreams(cat);
@@ -37,11 +38,6 @@ function FilmesPage() {
           }));
         }}
         onPlay={play}
-        renderCardBadge={() => (
-          <span className="rounded bg-accent/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
-            Filme
-          </span>
-        )}
       />
       <Footer />
     </main>

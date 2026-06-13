@@ -1,27 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import mpegts from "mpegts.js";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type Props = {
   src: string;
   poster?: string;
   /** When true (or src ends in .m3u8), use hls.js when needed. */
   hls?: boolean;
+  /** Start playback at this position (seconds). */
+  startAt?: number;
+  /** Called periodically with playback progress. */
+  onProgress?: (position: number, duration: number) => void;
 };
 
-/** Derive an MPEG-TS URL from an Xtream-style HLS URL: /live/u/p/123.m3u8 -> /live/u/p/123.ts */
 function toTsUrl(src: string): string | null {
   if (/\.m3u8(\?|$)/i.test(src)) return src.replace(/\.m3u8(\?|$)/i, ".ts$1");
   if (/\/live\/[^/]+\/[^/]+\/\d+$/i.test(src)) return src + ".ts";
   return null;
 }
 
-export function VideoPlayer({ src, poster, hls }: Props) {
+export function VideoPlayer({ src, poster, hls, startAt, onProgress }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  // 0: try HLS/native, 1: try mpegts.js with .ts URL
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
@@ -50,7 +52,6 @@ export function VideoPlayer({ src, poster, hls }: Props) {
     };
 
     if (stage === 1) {
-      // MPEG-TS over HTTP via mpegts.js
       const tsUrl = toTsUrl(src) ?? src;
       tsPlayer = mpegts.createPlayer(
         { type: "mpegts", isLive: true, url: tsUrl, cors: true },
@@ -78,18 +79,41 @@ export function VideoPlayer({ src, poster, hls }: Props) {
       video.src = src;
     }
 
-    const onLoaded = () => setLoading(false);
+    const onLoaded = () => {
+      setLoading(false);
+      if (startAt && startAt > 0 && Number.isFinite(startAt)) {
+        try {
+          video.currentTime = startAt;
+        } catch {
+          /* ignore */
+        }
+      }
+    };
     const onError = () => {
       if (tryFallback()) return;
       setLoading(false);
       setError("Não foi possível carregar o vídeo neste navegador.");
     };
+    let lastReport = 0;
+    const onTime = () => {
+      if (!onProgress) return;
+      const now = Date.now();
+      if (now - lastReport < 5000) return;
+      lastReport = now;
+      onProgress(video.currentTime || 0, video.duration || 0);
+    };
     video.addEventListener("loadeddata", onLoaded);
     video.addEventListener("error", onError);
+    video.addEventListener("timeupdate", onTime);
 
     return () => {
+      // emit one final progress on unmount
+      if (onProgress && video.currentTime > 0) {
+        try { onProgress(video.currentTime, video.duration || 0); } catch { /* ignore */ }
+      }
       video.removeEventListener("loadeddata", onLoaded);
       video.removeEventListener("error", onError);
+      video.removeEventListener("timeupdate", onTime);
       if (hlsInstance) hlsInstance.destroy();
       if (tsPlayer) {
         try {
@@ -98,15 +122,13 @@ export function VideoPlayer({ src, poster, hls }: Props) {
           tsPlayer.detachMediaElement();
           tsPlayer.destroy();
         } catch {
-          // ignore cleanup errors
+          /* ignore */
         }
       }
       video.removeAttribute("src");
       video.load();
     };
-  }, [src, hls, stage]);
-
-  const tsUrl = toTsUrl(src);
+  }, [src, hls, stage, startAt, onProgress]);
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black ring-1 ring-border/40">
@@ -126,31 +148,17 @@ export function VideoPlayer({ src, poster, hls }: Props) {
       {error ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/85 p-6 text-center text-sm text-white">
           <p className="font-medium">{error}</p>
-          <p className="max-w-md text-xs text-white/70">
-            Alguns canais ao vivo bloqueiam reprodução directa no navegador.
-            Tente novamente ou abra o link num leitor externo como VLC / MX Player.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {tsUrl && stage === 0 ? (
-              <button
-                onClick={() => {
-                  setError(null);
-                  setStage(1);
-                }}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
-              >
-                Tentar leitor alternativo
-              </button>
-            ) : null}
-            <a
-              href={src}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-black"
+          {stage === 0 && toTsUrl(src) ? (
+            <button
+              onClick={() => {
+                setError(null);
+                setStage(1);
+              }}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
             >
-              <ExternalLink className="size-4" /> Abrir num leitor externo
-            </a>
-          </div>
+              Tentar leitor alternativo
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>
