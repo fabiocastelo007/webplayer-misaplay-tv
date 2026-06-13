@@ -107,12 +107,15 @@ export function PrimeShowcase({
     }));
   }, [favKind, favVersion]);
 
+  const brokenVersion = useBrokenVersion();
+
   // Build per-category rows when activeCat = all
   const rows = useMemo(() => {
+    void brokenVersion;
     if (activeCat !== "all" || !cats.data || !featured.data) return [];
     const byCat = new Map<string, ShowcaseItem[]>();
     for (const it of featured.data) {
-      if (!it.image) continue;
+      if (!it.image || brokenImages.has(it.image)) continue;
       const arr = byCat.get(it.category_id) ?? [];
       if (arr.length < 18) arr.push(it);
       byCat.set(it.category_id, arr);
@@ -121,11 +124,11 @@ export function PrimeShowcase({
       .map((c) => ({ cat: c, items: byCat.get(c.category_id) ?? [] }))
       .filter((r) => r.items.length > 0)
       .slice(0, rowLimit);
-  }, [activeCat, cats.data, featured.data, rowLimit]);
+  }, [activeCat, cats.data, featured.data, rowLimit, brokenVersion]);
 
   const heroPool = useMemo(
-    () => (featured.data ?? []).filter((i) => !!i.image).slice(0, 5),
-    [featured.data],
+    () => (featured.data ?? []).filter((i) => !!i.image && !brokenImages.has(i.image)).slice(0, 5),
+    [featured.data, brokenVersion],
   );
   const [heroIdx, setHeroIdx] = useState(0);
   useEffect(() => {
@@ -136,13 +139,14 @@ export function PrimeShowcase({
   const hero = heroPool[heroIdx] ?? featured.data?.[0];
 
   const filtered = useMemo(() => {
+    void brokenVersion;
     if (activeCat === "all") return [];
     const base = activeCat === "favorites" ? favoriteItems : (categoryView.data ?? []);
-    const list = activeCat === "favorites" ? base : base.filter((i) => !!i.image);
+    const list = activeCat === "favorites" ? base : base.filter((i) => !!i.image && !brokenImages.has(i.image));
     const q = query.trim().toLowerCase();
     if (!q) return list;
     return list.filter((i) => i.name.toLowerCase().includes(q));
-  }, [activeCat, categoryView.data, query, favoriteItems]);
+  }, [activeCat, categoryView.data, query, favoriteItems, brokenVersion]);
 
   return (
     <div>
