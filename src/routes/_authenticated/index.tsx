@@ -35,6 +35,7 @@ function Home() {
         title="Em destaque — Filmes"
         kind="vod"
         rowLimit={5}
+        hideCategoryBar
         fetchCategories={() => xtream.vodCategories()}
         fetchItems={async (cat) => {
           const list = await xtream.vodStreams(cat);
