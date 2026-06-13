@@ -19,6 +19,7 @@ function SeriesPage() {
       <PrimeShowcase
         title="Séries"
         kind="series"
+        hideCategoryBar
         fetchCategories={() => xtream.seriesCategories()}
         fetchItems={async (cat) => {
           const list = await xtream.series(cat);
@@ -32,11 +33,6 @@ function SeriesPage() {
         }}
         onPlay={open}
         onOpen={open}
-        renderCardBadge={() => (
-          <span className="rounded bg-primary/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
-            Série
-          </span>
-        )}
       />
       <Footer />
     </main>
