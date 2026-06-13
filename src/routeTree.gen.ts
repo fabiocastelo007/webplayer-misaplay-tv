@@ -12,6 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedTvRouteImport } from './routes/_authenticated/tv'
+import { Route as AuthenticatedSeriesRouteImport } from './routes/_authenticated/series'
+import { Route as AuthenticatedFilmesRouteImport } from './routes/_authenticated/filmes'
+import { Route as AuthenticatedSerieIdRouteImport } from './routes/_authenticated/serie.$id'
+import { Route as AuthenticatedWatchTypeIdRouteImport } from './routes/_authenticated/watch.$type.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -27,27 +32,91 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTvRoute = AuthenticatedTvRouteImport.update({
+  id: '/tv',
+  path: '/tv',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSeriesRoute = AuthenticatedSeriesRouteImport.update({
+  id: '/series',
+  path: '/series',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFilmesRoute = AuthenticatedFilmesRouteImport.update({
+  id: '/filmes',
+  path: '/filmes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSerieIdRoute = AuthenticatedSerieIdRouteImport.update({
+  id: '/serie/$id',
+  path: '/serie/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWatchTypeIdRoute =
+  AuthenticatedWatchTypeIdRouteImport.update({
+    id: '/watch/$type/$id',
+    path: '/watch/$type/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/filmes': typeof AuthenticatedFilmesRoute
+  '/series': typeof AuthenticatedSeriesRoute
+  '/tv': typeof AuthenticatedTvRoute
+  '/serie/$id': typeof AuthenticatedSerieIdRoute
+  '/watch/$type/$id': typeof AuthenticatedWatchTypeIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/filmes': typeof AuthenticatedFilmesRoute
+  '/series': typeof AuthenticatedSeriesRoute
+  '/tv': typeof AuthenticatedTvRoute
   '/': typeof AuthenticatedIndexRoute
+  '/serie/$id': typeof AuthenticatedSerieIdRoute
+  '/watch/$type/$id': typeof AuthenticatedWatchTypeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/filmes': typeof AuthenticatedFilmesRoute
+  '/_authenticated/series': typeof AuthenticatedSeriesRoute
+  '/_authenticated/tv': typeof AuthenticatedTvRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/serie/$id': typeof AuthenticatedSerieIdRoute
+  '/_authenticated/watch/$type/$id': typeof AuthenticatedWatchTypeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/filmes'
+    | '/series'
+    | '/tv'
+    | '/serie/$id'
+    | '/watch/$type/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/'
-  id: '__root__' | '/_authenticated' | '/auth' | '/_authenticated/'
+  to:
+    | '/auth'
+    | '/filmes'
+    | '/series'
+    | '/tv'
+    | '/'
+    | '/serie/$id'
+    | '/watch/$type/$id'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/filmes'
+    | '/_authenticated/series'
+    | '/_authenticated/tv'
+    | '/_authenticated/'
+    | '/_authenticated/serie/$id'
+    | '/_authenticated/watch/$type/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +147,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tv': {
+      id: '/_authenticated/tv'
+      path: '/tv'
+      fullPath: '/tv'
+      preLoaderRoute: typeof AuthenticatedTvRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/series': {
+      id: '/_authenticated/series'
+      path: '/series'
+      fullPath: '/series'
+      preLoaderRoute: typeof AuthenticatedSeriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/filmes': {
+      id: '/_authenticated/filmes'
+      path: '/filmes'
+      fullPath: '/filmes'
+      preLoaderRoute: typeof AuthenticatedFilmesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/serie/$id': {
+      id: '/_authenticated/serie/$id'
+      path: '/serie/$id'
+      fullPath: '/serie/$id'
+      preLoaderRoute: typeof AuthenticatedSerieIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/watch/$type/$id': {
+      id: '/_authenticated/watch/$type/$id'
+      path: '/watch/$type/$id'
+      fullPath: '/watch/$type/$id'
+      preLoaderRoute: typeof AuthenticatedWatchTypeIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedFilmesRoute: typeof AuthenticatedFilmesRoute
+  AuthenticatedSeriesRoute: typeof AuthenticatedSeriesRoute
+  AuthenticatedTvRoute: typeof AuthenticatedTvRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSerieIdRoute: typeof AuthenticatedSerieIdRoute
+  AuthenticatedWatchTypeIdRoute: typeof AuthenticatedWatchTypeIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedFilmesRoute: AuthenticatedFilmesRoute,
+  AuthenticatedSeriesRoute: AuthenticatedSeriesRoute,
+  AuthenticatedTvRoute: AuthenticatedTvRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSerieIdRoute: AuthenticatedSerieIdRoute,
+  AuthenticatedWatchTypeIdRoute: AuthenticatedWatchTypeIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
