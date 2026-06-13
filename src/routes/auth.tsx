@@ -47,7 +47,7 @@ function AuthPage() {
         toast.error(result.error);
         return;
       }
-      }
+
       saveSession({
         package: result.package as XtreamPackage,
         dns: result.dns,
