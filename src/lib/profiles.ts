@@ -45,7 +45,7 @@ export function defaultAvatarFor(name: string): string {
 export function listProfiles(): Profile[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(PROFILES_KEY);
+    const raw = localStorage.getItem(profilesKey());
     return raw ? (JSON.parse(raw) as Profile[]) : [];
   } catch {
     return [];
@@ -53,7 +53,7 @@ export function listProfiles(): Profile[] {
 }
 
 function persist(list: Profile[]) {
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(list));
+  localStorage.setItem(profilesKey(), JSON.stringify(list));
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
@@ -89,7 +89,7 @@ export function deleteProfile(id: string) {
 
 export function getActiveProfileId(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(ACTIVE_KEY);
+  return localStorage.getItem(activeKey());
 }
 
 export function getActiveProfile(): Profile | null {
@@ -100,13 +100,13 @@ export function getActiveProfile(): Profile | null {
 
 export function setActiveProfile(id: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(ACTIVE_KEY, id);
+  localStorage.setItem(activeKey(), id);
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
 export function clearActiveProfile() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(ACTIVE_KEY);
+  localStorage.removeItem(activeKey());
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
