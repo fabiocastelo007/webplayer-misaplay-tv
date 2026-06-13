@@ -50,11 +50,12 @@ function TvPage() {
   }, [streams.data, query, activeCat, favTick]);
 
   const [current, setCurrent] = useState<LiveStream | null>(null);
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const openChannel = async (ch: LiveStream) => {
     setCurrent(ch);
+    setPanelOpen(false);
     const el = containerRef.current;
     if (el && !document.fullscreenElement) {
       try {
