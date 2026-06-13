@@ -1,14 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { episodeStreamUrl, liveStreamUrl, vodStreamUrl } from "@/lib/xtream-api";
+import { addDownload, triggerDownload } from "@/lib/downloads";
+import { toast } from "sonner";
 
 const searchSchema = z.object({
   ext: z.string().default("mp4"),
   title: z.string().optional(),
+  image: z.string().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/watch/$type/$id")({
@@ -18,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/watch/$type/$id")({
 
 function WatchPage() {
   const { type, id } = Route.useParams();
-  const { ext, title } = Route.useSearch();
+  const { ext, title, image } = Route.useSearch();
 
   let url = "";
   let isHls = false;
@@ -31,7 +35,23 @@ function WatchPage() {
     url = episodeStreamUrl(id, ext);
   }
 
+  const canDownload = type !== "live";
   const backTo = type === "live" ? "/tv" : type === "movie" ? "/filmes" : "/series";
+
+  const handleDownload = () => {
+    const safe = (title || `misaplay-${id}`).replace(/[^a-zA-Z0-9-_ ]/g, "").slice(0, 80);
+    const filename = `${safe}.${ext}`;
+    triggerDownload(url, filename);
+    addDownload({
+      id: `${type}-${id}`,
+      kind: type === "series" ? "episode" : "movie",
+      title: title || `Item ${id}`,
+      image,
+      url,
+      addedAt: Date.now(),
+    });
+    toast.success("Download iniciado — guardado em 'Minha Conta'");
+  };
 
   return (
     <main className="min-h-screen">
@@ -47,16 +67,30 @@ function WatchPage() {
           <h1 className="mb-4 text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
         ) : null}
 
-        {url ? (
-          <VideoPlayer src={url} hls={isHls} />
-        ) : (
+        {url ? <VideoPlayer src={url} hls={isHls} poster={image} /> : (
           <p className="text-sm text-destructive">Conteúdo inválido.</p>
         )}
 
+        <div className="mt-4 flex flex-wrap gap-2">
+          {canDownload ? (
+            <Button onClick={handleDownload} variant="secondary">
+              <Download className="size-4" /> Baixar para assistir offline
+            </Button>
+          ) : null}
+          <Button asChild variant="ghost">
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="size-4" /> Abrir num leitor externo
+            </a>
+          </Button>
+        </div>
+
         <p className="mt-4 text-xs text-muted-foreground">
-          Caso o vídeo não carregue, o servidor pode estar bloqueando reprodução via navegador. Tente em outro navegador ou rede.
+          {canDownload
+            ? "O ficheiro é entregue directamente pelo servidor. Tempo depende da sua ligação."
+            : "Canais ao vivo não são suportados para download offline."}
         </p>
       </div>
+      <Footer />
     </main>
   );
 }

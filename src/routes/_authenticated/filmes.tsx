@@ -1,19 +1,28 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppHeader } from "@/components/AppHeader";
-import { CatalogBrowser, PosterCard } from "@/components/catalog/CatalogBrowser";
+import { Footer } from "@/components/Footer";
+import { PrimeShowcase, type ShowcaseItem } from "@/components/catalog/PrimeShowcase";
 import { xtream, type VodStream } from "@/lib/xtream-api";
 
 export const Route = createFileRoute("/_authenticated/filmes")({
-  head: () => ({ meta: [{ title: "Filmes — Misaplay" }] }),
+  head: () => ({ meta: [{ title: "Filmes — Misaplay TV" }] }),
   component: FilmesPage,
 });
 
 function FilmesPage() {
   const navigate = useNavigate();
+  const play = (item: ShowcaseItem) => {
+    const ext = item.ext || "mp4";
+    navigate({
+      to: "/watch/$type/$id",
+      params: { type: "movie", id: String(item.id) },
+      search: { ext, title: item.name },
+    });
+  };
   return (
     <main className="min-h-screen">
       <AppHeader />
-      <CatalogBrowser
+      <PrimeShowcase
         title="Filmes"
         kind="vod"
         fetchCategories={() => xtream.vodCategories()}
@@ -27,25 +36,14 @@ function FilmesPage() {
             ext: v.container_extension,
           }));
         }}
-        renderCard={(item) => {
-          const ext = (item as unknown as { ext?: string }).ext || "mp4";
-          return (
-            <button
-              type="button"
-              className="block w-full text-left"
-              onClick={() =>
-                navigate({
-                  to: "/watch/$type/$id",
-                  params: { type: "movie", id: String(item.id) },
-                  search: { ext, title: item.name },
-                })
-              }
-            >
-              <PosterCard name={item.name} image={item.image} badge="Filme" />
-            </button>
-          );
-        }}
+        onPlay={play}
+        renderCardBadge={() => (
+          <span className="rounded bg-accent/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
+            Filme
+          </span>
+        )}
       />
+      <Footer />
     </main>
   );
 }
