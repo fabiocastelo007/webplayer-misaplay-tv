@@ -1,13 +1,16 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ChangeEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
 import { loadSession, saveSession, type XtreamUserInfo, type XtreamServerInfo, type XtreamPackage } from "@/lib/xtream";
+import { parseM3U, fetchM3U, saveM3USession } from "@/lib/m3u";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ListVideo } from "lucide-react";
 import postersBg from "@/assets/posters-bg.jpg";
 import { Logo } from "@/components/Logo";
 import { BRAND } from "@/lib/config";
@@ -148,6 +151,19 @@ function AuthPage() {
             </Button>
           </form>
 
+          <div className="mt-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border/60" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">ou</span>
+            <div className="h-px flex-1 bg-border/60" />
+          </div>
+
+          <M3UImportButton
+            onLoaded={(count) => {
+              toast.success(`${count} canais importados via M3U`);
+              navigate({ to: "/perfis" });
+            }}
+          />
+
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Não tem conta? Fale connosco no WhatsApp{" "}
             <a
@@ -162,5 +178,111 @@ function AuthPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function M3UImportButton({ onLoaded }: { onLoaded: (count: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState(
+    "http://misaplay.online/get.php?username=&password=&type=m3u_plus&output=m3u8",
+  );
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function loadFromUrl() {
+    if (!url.trim()) return;
+    setBusy(true);
+    try {
+      const content = await fetchM3U(url.trim());
+      finish(content, url.trim());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao obter lista");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function loadFromText() {
+    if (!text.trim()) return;
+    finish(text, "manual");
+  }
+
+  async function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const content = await f.text();
+    finish(content, f.name);
+  }
+
+  function finish(content: string, source: string) {
+    const channels = parseM3U(content);
+    if (channels.length === 0) {
+      toast.error("Nenhum canal válido encontrado na lista");
+      return;
+    }
+    saveM3USession({ source, loadedAt: Date.now(), channels });
+    // Stub xtream session so navigation gates pass; TV reads M3U automatically.
+    saveSession({
+      package: "MAX" as XtreamPackage,
+      dns: "m3u://local",
+      username: "m3u",
+      password: "m3u",
+      user_info: { username: "m3u", status: "Active", exp_date: null, is_trial: "0", active_cons: "0", max_connections: "1" } as XtreamUserInfo,
+      server_info: { url: "m3u://local", port: "0", server_protocol: "m3u" } as XtreamServerInfo,
+      loggedAt: Date.now(),
+    });
+    setOpen(false);
+    onLoaded(channels.length);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="mt-3 h-11 w-full" type="button">
+          <ListVideo className="size-4" /> Importar lista M3U (Pacote Max offline)
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Importar lista M3U</DialogTitle>
+          <DialogDescription>
+            Use esta opção se o Pacote Max não responder. A lista é carregada e armazenada no seu dispositivo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>URL da lista (.m3u / .m3u8)</Label>
+            <div className="flex gap-2">
+              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="http://..." />
+              <Button onClick={loadFromUrl} disabled={busy}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : "Carregar"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Substitua <code>username</code> e <code>password</code> no URL pelos seus dados.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Ou carregar ficheiro</Label>
+            <Input type="file" accept=".m3u,.m3u8,text/plain" onChange={onFile} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Ou colar conteúdo M3U</Label>
+            <Textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="#EXTM3U..."
+              className="h-28 font-mono text-xs"
+            />
+            <Button variant="secondary" onClick={loadFromText} className="w-full">
+              Usar conteúdo colado
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
