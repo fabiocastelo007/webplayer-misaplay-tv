@@ -82,6 +82,11 @@ export function AppHeader() {
               <Users className="size-3.5 text-muted-foreground" />
             </button>
           ) : null}
+          {admin ? (
+            <Button asChild variant={pathname.startsWith("/admin") ? "secondary" : "ghost"} size="sm" title="Administração">
+              <Link to="/admin"><Shield className="size-4" /></Link>
+            </Button>
+          ) : null}
           <Button asChild variant={pathname.startsWith("/conta") ? "secondary" : "ghost"} size="sm">
             <Link to="/conta">
               <User className="size-4" />
