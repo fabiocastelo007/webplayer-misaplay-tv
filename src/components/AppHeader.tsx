@@ -1,14 +1,22 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LogOut, Film, Tv, Clapperboard, User, Home } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, Film, Tv, Clapperboard, User, Home, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearSession, loadSession } from "@/lib/xtream";
 import { Logo } from "@/components/Logo";
+import { clearActiveProfile, getActiveProfile, onProfilesChanged, type Profile } from "@/lib/profiles";
 
 export function AppHeader() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const session = typeof window !== "undefined" ? loadSession() : null;
   const pkgLabel = session?.package === "MAX" ? "Pacote Max" : "Pacote Premium";
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+  useEffect(() => {
+    setProfile(getActiveProfile());
+    return onProfilesChanged(() => setProfile(getActiveProfile()));
+  }, []);
 
   const nav: { to: "/" | "/filmes" | "/series" | "/tv"; label: string; icon: typeof Home; exact?: boolean }[] = [
     { to: "/", label: "Início", icon: Home, exact: true },
@@ -19,7 +27,13 @@ export function AppHeader() {
 
   function handleSignOut() {
     clearSession();
+    clearActiveProfile();
     navigate({ to: "/auth", replace: true });
+  }
+
+  function switchProfile() {
+    clearActiveProfile();
+    navigate({ to: "/perfis" });
   }
 
   return (
@@ -50,6 +64,19 @@ export function AppHeader() {
           </nav>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {profile ? (
+            <button
+              onClick={switchProfile}
+              title="Trocar perfil"
+              className="flex items-center gap-2 rounded-full bg-secondary/60 py-1 pl-1 pr-3 text-sm hover:bg-secondary"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background text-base">
+                {profile.avatar ?? "👤"}
+              </span>
+              <span className="hidden max-w-[120px] truncate sm:inline">{profile.name}</span>
+              <Users className="size-3.5 text-muted-foreground" />
+            </button>
+          ) : null}
           <Button asChild variant={pathname.startsWith("/conta") ? "secondary" : "ghost"} size="sm">
             <Link to="/conta">
               <User className="size-4" />

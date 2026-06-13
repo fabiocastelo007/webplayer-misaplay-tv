@@ -1,28 +1,33 @@
-// Continuar a assistir — progresso por (type,id). LocalStorage only.
+// Continuar a assistir — progresso por (type,id). LocalStorage por perfil.
+import { getActiveProfileId } from "./profiles";
 
 export type WatchKind = "movie" | "series" | "live";
 
 export type WatchEntry = {
-  key: string; // `${type}-${id}` (series uses episode id)
+  key: string;
   type: WatchKind;
   id: string;
   title: string;
   image?: string;
   ext?: string;
-  position: number; // seconds
-  duration: number; // seconds (0 if unknown)
+  position: number;
+  duration: number;
   updatedAt: number;
-  // For series episodes, link back to the series detail page
   seriesId?: string;
 };
 
-const KEY = "misaplay_watch_history";
+const BASE = "misaplay_watch_history";
 const EVT = "misaplay-watch-history-changed";
+
+function storageKey() {
+  const pid = getActiveProfileId();
+  return pid ? `${BASE}__${pid}` : BASE;
+}
 
 export function listWatchHistory(): WatchEntry[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(storageKey());
     if (!raw) return [];
     return (JSON.parse(raw) as WatchEntry[]).sort((a, b) => b.updatedAt - a.updatedAt);
   } catch {
@@ -32,23 +37,22 @@ export function listWatchHistory(): WatchEntry[] {
 
 export function saveProgress(entry: Omit<WatchEntry, "updatedAt">) {
   if (typeof window === "undefined") return;
-  if (entry.type === "live") return; // não rastrear ao vivo
+  if (entry.type === "live") return;
   if (entry.duration > 0 && entry.position / entry.duration > 0.97) {
-    // praticamente terminou — remover
     removeFromHistory(entry.key);
     return;
   }
-  if (entry.position < 10) return; // ignorar arranque
+  if (entry.position < 10) return;
   const list = listWatchHistory().filter((w) => w.key !== entry.key);
   list.unshift({ ...entry, updatedAt: Date.now() });
-  localStorage.setItem(KEY, JSON.stringify(list.slice(0, 60)));
+  localStorage.setItem(storageKey(), JSON.stringify(list.slice(0, 60)));
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
 export function removeFromHistory(key: string) {
   if (typeof window === "undefined") return;
   const list = listWatchHistory().filter((w) => w.key !== key);
-  localStorage.setItem(KEY, JSON.stringify(list));
+  localStorage.setItem(storageKey(), JSON.stringify(list));
   window.dispatchEvent(new CustomEvent(EVT));
 }
 
@@ -61,8 +65,10 @@ export function onWatchHistoryChanged(cb: () => void) {
   const h = () => cb();
   window.addEventListener(EVT, h);
   window.addEventListener("storage", h);
+  window.addEventListener("misaplay-profiles-changed", h);
   return () => {
     window.removeEventListener(EVT, h);
     window.removeEventListener("storage", h);
+    window.removeEventListener("misaplay-profiles-changed", h);
   };
 }

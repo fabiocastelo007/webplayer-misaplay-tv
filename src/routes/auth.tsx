@@ -55,7 +55,7 @@ function AuthPage() {
         loggedAt: Date.now(),
       });
       toast.success(`Conectado no ${result.package === "MAX" ? "Pacote Max" : "Pacote Premium"}`);
-      navigate({ to: "/" });
+      navigate({ to: "/perfis" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao autenticar");
     } finally {
