@@ -222,11 +222,17 @@ function HeroBanner({
   title,
   onPlay,
   onOpen,
+  dots = 0,
+  activeDot = 0,
+  onDot,
 }: {
   item: ShowcaseItem;
   title: string;
   onPlay: (i: ShowcaseItem) => void;
   onOpen?: (i: ShowcaseItem) => void;
+  dots?: number;
+  activeDot?: number;
+  onDot?: (i: number) => void;
 }) {
   return (
     <section className="relative h-[55vh] min-h-[360px] w-full overflow-hidden">
