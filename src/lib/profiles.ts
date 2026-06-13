@@ -1,4 +1,9 @@
 // Perfis locais (até 2). Cada perfil isola favoritos e histórico.
+// Os perfis são guardados POR USUÁRIO (username Xtream/M3U) para que cada
+// conta veja apenas os seus próprios perfis.
+
+import { loadSession } from "./xtream";
+import { loadM3USession } from "./m3u";
 
 export type Profile = {
   id: string;
@@ -8,10 +13,26 @@ export type Profile = {
   createdAt: number;
 };
 
-const PROFILES_KEY = "misaplay_profiles";
-const ACTIVE_KEY = "misaplay_active_profile";
+function currentUserKey(): string {
+  if (typeof window === "undefined") return "_anon";
+  try {
+    const s = loadSession();
+    if (s?.username) return `x:${s.username}`;
+    const m = loadM3USession();
+    if (m?.username) return `m:${m.username}`;
+    if (m?.source) return `m:${m.source}`;
+  } catch { /* ignore */ }
+  return "_anon";
+}
+
+const PROFILES_PREFIX = "misaplay_profiles__";
+const ACTIVE_PREFIX = "misaplay_active_profile__";
 const EVT = "misaplay-profiles-changed";
 export const MAX_PROFILES = 2;
+
+function profilesKey() { return PROFILES_PREFIX + currentUserKey(); }
+function activeKey() { return ACTIVE_PREFIX + currentUserKey(); }
+
 
 const DEFAULT_AVATARS = ["🦸", "👩", "🧑", "👦", "👧", "🐱", "🐶", "🦊"];
 
