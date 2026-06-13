@@ -446,7 +446,7 @@ export function PrimePoster({
   favKind?: FavKind;
 }) {
   const [broken, setBroken] = useState(false);
-  if (!item.image || broken) return null;
+  if (!item.image || broken || brokenImages.has(item.image)) return null;
   return (
     <div className="group/card relative overflow-hidden rounded-lg bg-secondary/50 ring-1 ring-border/40 transition hover:ring-primary">
       <button
