@@ -4,7 +4,7 @@ import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Category } from "@/lib/xtream-api";
 
-type Item = { id: number | string; name: string; image: string; category_id: string };
+type Item = { id: number | string; name: string; image: string; category_id: string; ext?: string };
 
 type Props = {
   title: string;
