@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Loader2, Search, Play, Info, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,25 @@ import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/catalog/FavoriteButton";
 import { listFavorites, onFavoritesChanged, type FavKind } from "@/lib/favorites";
 import type { Category } from "@/lib/xtream-api";
+
+// Track image URLs that failed to load so we can hide them everywhere.
+const brokenImages = new Set<string>();
+const brokenListeners = new Set<() => void>();
+function markBroken(url: string) {
+  if (!url || brokenImages.has(url)) return;
+  brokenImages.add(url);
+  brokenListeners.forEach((l) => l());
+}
+function subscribeBroken(cb: () => void) {
+  brokenListeners.add(cb);
+  return () => brokenListeners.delete(cb);
+}
+function getBrokenSnapshot() {
+  return brokenImages.size;
+}
+function useBrokenVersion() {
+  return useSyncExternalStore(subscribeBroken, getBrokenSnapshot, getBrokenSnapshot);
+}
 
 export type ShowcaseItem = {
   id: number | string;
