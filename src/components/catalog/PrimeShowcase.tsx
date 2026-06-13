@@ -273,6 +273,21 @@ function HeroBanner({
             </div>
           </div>
         </div>
+        {dots > 1 ? (
+          <div className="pointer-events-auto absolute bottom-6 right-6 z-10 flex gap-2">
+            {Array.from({ length: dots }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => onDot?.(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={
+                  "h-2 rounded-full transition-all " +
+                  (i === activeDot ? "w-6 bg-foreground" : "w-2 bg-foreground/40 hover:bg-foreground/70")
+                }
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
