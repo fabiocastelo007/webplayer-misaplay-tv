@@ -93,6 +93,7 @@ export function PrimeShowcase({
     if (activeCat !== "all" || !cats.data || !featured.data) return [];
     const byCat = new Map<string, ShowcaseItem[]>();
     for (const it of featured.data) {
+      if (!it.image) continue;
       const arr = byCat.get(it.category_id) ?? [];
       if (arr.length < 18) arr.push(it);
       byCat.set(it.category_id, arr);
