@@ -58,7 +58,7 @@ export function VideoPlayer({ src, poster, hls }: Props) {
       );
       tsPlayer.attachMediaElement(video);
       tsPlayer.load();
-      tsPlayer.play().catch(() => {});
+      Promise.resolve(tsPlayer.play()).catch(() => {});
       tsPlayer.on(mpegts.Events.ERROR, () => {
         setLoading(false);
         setError("Não foi possível carregar o stream.");
