@@ -24,6 +24,8 @@ type Props = {
   renderCardBadge?: (item: ShowcaseItem) => ReactNode;
   /** Max number of category rows on the home view. */
   rowLimit?: number;
+  /** Hide the sticky category filter bar (used on home). */
+  hideCategoryBar?: boolean;
 };
 
 export function PrimeShowcase({
@@ -35,6 +37,7 @@ export function PrimeShowcase({
   onOpen,
   renderCardBadge,
   rowLimit = 8,
+  hideCategoryBar = false,
 }: Props) {
   const cats = useQuery({
     queryKey: ["xtream", kind, "categories"],
@@ -110,6 +113,7 @@ export function PrimeShowcase({
       ) : null}
 
       {/* Category bar */}
+      {!hideCategoryBar ? (
       <div className="sticky top-[64px] z-20 border-b border-border/40 bg-background/85 backdrop-blur md:top-[60px]">
         <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
           <button
@@ -142,6 +146,7 @@ export function PrimeShowcase({
           ))}
         </div>
       </div>
+      ) : null}
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         {activeCat === "all" ? (
