@@ -118,7 +118,8 @@ export function PrimeShowcase({
 
   const filtered = useMemo(() => {
     if (activeCat === "all") return [];
-    const list = activeCat === "favorites" ? favoriteItems : (categoryView.data ?? []);
+    const base = activeCat === "favorites" ? favoriteItems : (categoryView.data ?? []);
+    const list = activeCat === "favorites" ? base : base.filter((i) => !!i.image);
     const q = query.trim().toLowerCase();
     if (!q) return list;
     return list.filter((i) => i.name.toLowerCase().includes(q));
