@@ -1,6 +1,8 @@
 import { Mail, Phone, Globe, MessageCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { BRAND } from "@/lib/config";
+import { loadSettings, DEFAULT_TEXTS, onSettingsChanged, type AdminTexts } from "@/lib/settings";
 
 export function Footer() {
   return (
