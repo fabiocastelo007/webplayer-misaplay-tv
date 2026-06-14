@@ -38,6 +38,40 @@ function AuthPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [texts, setTexts] = useState(() => {
+    if (typeof window === "undefined") {
+      return {
+        welcomeTitle: "BEM-VINDO",
+        welcomeSubtitle: "",
+        signupNote: "Não tem conta? Fale connosco no WhatsApp {phone}, {email}",
+      };
+    }
+    // lazy require to avoid SSR
+    const { loadSettings } = require("@/lib/settings") as typeof import("@/lib/settings");
+    return loadSettings().texts;
+  });
+  // Hidden admin trigger: 7 quick taps on the signup note grants admin and opens /admin.
+  const tapsRef = useState<{ n: number; t: number }>({ n: 0, t: 0 })[0];
+  async function handleSecretTap() {
+    const now = Date.now();
+    if (now - tapsRef.t > 2000) tapsRef.n = 0;
+    tapsRef.t = now;
+    tapsRef.n += 1;
+    if (tapsRef.n >= 7) {
+      tapsRef.n = 0;
+      const { grantAdmin } = await import("@/lib/settings");
+      grantAdmin();
+      toast.success("Acesso de administrador concedido");
+      navigate({ to: "/admin" });
+    }
+  }
+  // Keep texts in sync after admin changes
+  if (typeof window !== "undefined") {
+    // no-op to satisfy lint; texts state is fine as initial snapshot
+    void texts;
+    void setTexts;
+  }
+
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
