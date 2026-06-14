@@ -29,15 +29,24 @@ function FilmesPage() {
         fetchCategories={() => xtream.vodCategories()}
         fetchItems={async (cat) => {
           const list = await xtream.vodStreams(cat);
-          return list.map((v: VodStream) => ({
-            id: v.stream_id,
-            name: v.name,
-            image: v.stream_icon,
-            category_id: v.category_id,
-            ext: v.container_extension,
-            plot: (v as VodStream & { plot?: string }).plot,
-          }));
-
+          return list.map((v: VodStream) => {
+            const x = v as VodStream & { plot?: string; releaseDate?: string; release_date?: string; episode_run_time?: string | number; genre?: string };
+            const yearSrc = x.releaseDate || x.release_date || v.added || "";
+            const year = /\d{4}/.exec(String(yearSrc))?.[0];
+            const runtime = x.episode_run_time ? `${x.episode_run_time} min` : undefined;
+            return {
+              id: v.stream_id,
+              name: v.name,
+              image: v.stream_icon,
+              category_id: v.category_id,
+              ext: v.container_extension,
+              plot: x.plot,
+              year,
+              duration: runtime,
+              rating: v.rating_5based,
+              genre: x.genre,
+            };
+          });
         }}
         onPlay={play}
       />
