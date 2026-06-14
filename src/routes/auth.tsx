@@ -33,6 +33,44 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function renderSignupNote(template: string, phone: string, email: string, whatsapp: string) {
+  // Replace {phone} with WhatsApp link, {email} with mailto link.
+  const parts: (string | JSX.Element)[] = [];
+  let i = 0;
+  let key = 0;
+  const regex = /\{(phone|email)\}/g;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(template))) {
+    if (m.index > i) parts.push(template.slice(i, m.index));
+    if (m[1] === "phone") {
+      parts.push(
+        <a
+          key={key++}
+          href={`https://wa.me/${whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-primary hover:underline"
+        >
+          {phone}
+        </a>,
+      );
+    } else {
+      parts.push(
+        <a
+          key={key++}
+          href={`mailto:${email}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {email}
+        </a>,
+      );
+    }
+    i = m.index + m[0].length;
+  }
+  if (i < template.length) parts.push(template.slice(i));
+  return parts;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const login = useServerFn(xtreamLogin);
