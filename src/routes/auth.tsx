@@ -122,7 +122,7 @@ function AuthPage() {
     }
   }
 
-  const wallPosters = typeof window !== "undefined" ? loadSettings().loginPosters : [];
+  
 
 
 
