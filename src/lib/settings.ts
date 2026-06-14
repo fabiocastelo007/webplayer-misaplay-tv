@@ -148,6 +148,12 @@ export function tryAdminLogin(password: string): boolean {
   return false;
 }
 
+export function grantAdmin() {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(ADMIN_FLAG, "1");
+  window.dispatchEvent(new CustomEvent(EVT));
+}
+
 export function adminLogout() {
   localStorage.removeItem(ADMIN_FLAG);
   window.dispatchEvent(new CustomEvent(EVT));
