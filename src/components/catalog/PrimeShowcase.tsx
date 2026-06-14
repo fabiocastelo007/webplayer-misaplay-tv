@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Loader2, Search, Play, Info, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Play, Info, Heart, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/catalog/FavoriteButton";
