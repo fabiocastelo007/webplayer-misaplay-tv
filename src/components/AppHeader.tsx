@@ -85,6 +85,22 @@ export function AppHeader() {
               <Users className="size-3.5 text-muted-foreground" />
             </button>
           ) : null}
+          {showExpiryAlert ? (
+            <Link
+              to="/conta"
+              title={
+                daysLeft! > 0
+                  ? `Sua assinatura expira em ${daysLeft} dia${daysLeft === 1 ? "" : "s"}`
+                  : "Sua assinatura expirou"
+              }
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-amber-400 hover:bg-secondary/60"
+            >
+              <Bell className="size-5 animate-pulse" />
+              <span className="absolute -right-0.5 -top-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white">
+                {daysLeft! > 0 ? daysLeft : "!"}
+              </span>
+            </Link>
+          ) : null}
           <Button asChild variant={pathname.startsWith("/conta") ? "secondary" : "ghost"} size="sm">
             <Link to="/conta">
               <User className="size-4" />
