@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Lock, Plus, Pencil, Trash2, LogOut, Check, X } from "lucide-react";
+import { Lock, Plus, Pencil, Trash2, LogOut, Check, X, Upload } from "lucide-react";
+import { useRef } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
