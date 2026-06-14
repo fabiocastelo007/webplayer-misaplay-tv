@@ -80,13 +80,50 @@ function AdminPage() {
   );
 }
 
+function compressImage(file: File, maxWidth = 400, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("canvas"));
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = String(reader.result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function trySaveSettings(s: AdminSettings): boolean {
+  try {
+    saveSettings(s);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [s, setS] = useState<AdminSettings>(() => loadSettings());
 
   function persist(next: AdminSettings) {
-    setS(next);
-    saveSettings(next);
-    toast.success("Configurações guardadas");
+    if (trySaveSettings(next)) {
+      setS(next);
+      toast.success("Configurações guardadas");
+    } else {
+      toast.error("Erro ao guardar (espaço cheio). Remova alguns cartazes.");
+    }
   }
 
   return (
@@ -259,18 +296,16 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                       const files = Array.from(e.target.files ?? []);
                       if (!files.length) return;
                       const dataUrls = await Promise.all(
-                        files.map(
-                          (f) =>
-                            new Promise<string>((resolve, reject) => {
-                              const r = new FileReader();
-                              r.onload = () => resolve(String(r.result));
-                              r.onerror = reject;
-                              r.readAsDataURL(f);
-                            }),
-                        ),
+                        files.map((f) => compressImage(f, 400, 0.8)),
                       );
-                      setS({ ...s, loginPosters: [...s.loginPosters, ...dataUrls] });
-                      toast.success(`${dataUrls.length} imagem(ns) adicionada(s)`);
+                      const next = { ...s, loginPosters: [...s.loginPosters, ...dataUrls] };
+                      const ok = trySaveSettings(next);
+                      if (ok) {
+                        setS(next);
+                        toast.success(`${dataUrls.length} imagem(ns) adicionada(s) e guardada(s)`);
+                      } else {
+                        toast.error("Espaço cheio. Remova alguns cartazes antes de adicionar mais.");
+                      }
                       e.target.value = "";
                     }}
                   />
