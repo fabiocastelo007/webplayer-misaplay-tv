@@ -25,8 +25,9 @@ function FilmesPage() {
       <PrimeShowcase
         title="Filmes"
         kind="vod"
-        hideCategoryBar
+        rowLimit={999}
         fetchCategories={() => xtream.vodCategories()}
+
         fetchItems={async (cat) => {
           const list = await xtream.vodStreams(cat);
           return list.map((v: VodStream) => {

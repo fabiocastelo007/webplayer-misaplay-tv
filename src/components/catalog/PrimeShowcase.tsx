@@ -153,6 +153,14 @@ export function PrimeShowcase({
   }, [heroPool.length]);
   const hero = heroPool[heroIdx] ?? featured.data?.[0];
 
+  const globalSearchResults = useMemo(() => {
+    void brokenVersion;
+    const q = query.trim().toLowerCase();
+    if (activeCat !== "all" || !q) return [];
+    return (featured.data ?? [])
+      .filter((i) => !!i.image && !brokenImages.has(i.image) && i.name.toLowerCase().includes(q));
+  }, [activeCat, query, featured.data, brokenVersion]);
+
   const filtered = useMemo(() => {
     void brokenVersion;
     if (activeCat === "all") return [];
@@ -162,6 +170,7 @@ export function PrimeShowcase({
     if (!q) return list;
     return list.filter((i) => i.name.toLowerCase().includes(q));
   }, [activeCat, categoryView.data, query, favoriteItems, brokenVersion]);
+
 
   return (
     <div>
@@ -205,35 +214,67 @@ export function PrimeShowcase({
             <ErrorBox error={featured.error as Error} />
           ) : (
             <div className="space-y-10">
-              {topSlot}
-              {favoriteItems.length > 0 ? (
-                <CategoryRow
-                  title="Os meus favoritos"
-                  items={favoriteItems.slice(0, 18)}
-                  onPlay={onPlay}
-                  onOpen={onOpen}
-                  renderCardBadge={renderCardBadge}
-                  favKind={favKind}
-                  onSeeAll={() => setActiveCat("favorites")}
+              <div className="relative max-w-xl">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={kind === "series" ? "Buscar séries..." : kind === "vod" ? "Buscar filmes..." : "Buscar..."}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-10 bg-secondary/60 pl-9"
                 />
-              ) : null}
-              {rows.map(({ cat, items }) => (
-                <CategoryRow
-                  key={cat.category_id}
-                  title={cat.category_name}
-                  items={items}
-                  onPlay={onPlay}
-                  onOpen={onOpen}
-                  renderCardBadge={renderCardBadge}
-                  favKind={favKind}
-                  onSeeAll={() => setActiveCat(cat.category_id)}
-                />
-              ))}
-              {rows.length === 0 && favoriteItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível.</p>
-              ) : null}
+              </div>
+              {query.trim() ? (
+                globalSearchResults.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhum título encontrado.</p>
+                ) : (
+                  <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    {globalSearchResults.map((item) => (
+                      <li key={String(item.id)}>
+                        <PrimePoster
+                          item={item}
+                          onPlay={onPlay}
+                          onOpen={onOpen}
+                          badge={renderCardBadge?.(item)}
+                          favKind={favKind}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )
+              ) : (
+                <>
+                  {topSlot}
+                  {favoriteItems.length > 0 ? (
+                    <CategoryRow
+                      title="Os meus favoritos"
+                      items={favoriteItems.slice(0, 18)}
+                      onPlay={onPlay}
+                      onOpen={onOpen}
+                      renderCardBadge={renderCardBadge}
+                      favKind={favKind}
+                      onSeeAll={() => setActiveCat("favorites")}
+                    />
+                  ) : null}
+                  {rows.map(({ cat, items }) => (
+                    <CategoryRow
+                      key={cat.category_id}
+                      title={cat.category_name}
+                      items={items}
+                      onPlay={onPlay}
+                      onOpen={onOpen}
+                      renderCardBadge={renderCardBadge}
+                      favKind={favKind}
+                      onSeeAll={() => setActiveCat(cat.category_id)}
+                    />
+                  ))}
+                  {rows.length === 0 && favoriteItems.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível.</p>
+                  ) : null}
+                </>
+              )}
             </div>
           )
+
         ) : (
           <>
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
