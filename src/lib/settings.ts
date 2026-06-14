@@ -19,11 +19,20 @@ export type AdminColors = {
   accent: string;
 };
 
+export type AdminTexts = {
+  welcomeTitle: string;
+  welcomeSubtitle: string;
+  signupNote: string;
+  footerTagline: string;
+  supportHours: string;
+};
+
 export type AdminSettings = {
   servers: AdminServer[];
   plans: Plan[];
   brand: AdminBrand;
   colors: AdminColors;
+  texts: AdminTexts;
   adminPassword: string;
 };
 
