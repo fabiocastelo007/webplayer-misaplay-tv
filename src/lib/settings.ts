@@ -33,8 +33,10 @@ export type AdminSettings = {
   brand: AdminBrand;
   colors: AdminColors;
   texts: AdminTexts;
+  loginPosters: string[];
   adminPassword: string;
 };
+
 
 const KEY = "misaplay_admin_settings";
 const ADMIN_FLAG = "misaplay_is_admin";
@@ -59,6 +61,21 @@ export const DEFAULT_TEXTS: AdminTexts = {
     "Renovações, dúvidas e suporte técnico via WhatsApp todos os dias das 08h às 22h.",
 };
 
+export const DEFAULT_LOGIN_POSTERS: string[] = [
+  "https://image.tmdb.org/t/p/w500/kqjL17yufvn9OVLyXYpvtyrFfak.jpg",
+  "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+  "https://image.tmdb.org/t/p/w500/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg",
+  "https://image.tmdb.org/t/p/w500/yOm993lsJyPmBodlYjgpPwBjXP9.jpg",
+  "https://image.tmdb.org/t/p/w500/bX9KqgrATObqcrpZmtPDmwx9V6c.jpg",
+  "https://image.tmdb.org/t/p/w500/h3jYanWMEJq6JJsCopy1h7cT2Hs.jpg",
+  "https://image.tmdb.org/t/p/w500/jpZ4cIVjjAlYUbq2vfDjCdSp3rg.jpg",
+  "https://image.tmdb.org/t/p/w500/Acm2VfMSrFa15TwCEnKQYcQGzhz.jpg",
+  "https://image.tmdb.org/t/p/w500/qsdjk9oAKSQMWs0Vt5Pyfh6O4GZ.jpg",
+  "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+  "https://image.tmdb.org/t/p/w500/5SArAyiyAB8aZSU3X5LlBQNUVH4.jpg",
+  "https://image.tmdb.org/t/p/w500/6FRFIogh3zFnVWn7Z6zaixrIFsh.jpg",
+];
+
 export function defaultSettings(): AdminSettings {
   return {
     servers: XTREAM_SERVERS.map((s) => ({ ...s })),
@@ -66,9 +83,11 @@ export function defaultSettings(): AdminSettings {
     brand: { ...BRAND },
     colors: { ...DEFAULT_COLORS },
     texts: { ...DEFAULT_TEXTS },
+    loginPosters: [...DEFAULT_LOGIN_POSTERS],
     adminPassword: DEFAULT_ADMIN_PASSWORD,
   };
 }
+
 
 export function loadSettings(): AdminSettings {
   if (typeof window === "undefined") return defaultSettings();
@@ -83,6 +102,7 @@ export function loadSettings(): AdminSettings {
       brand: { ...d.brand, ...(parsed.brand ?? {}) },
       colors: { ...d.colors, ...(parsed.colors ?? {}) },
       texts: { ...d.texts, ...(parsed.texts ?? {}) },
+      loginPosters: parsed.loginPosters?.length ? parsed.loginPosters : d.loginPosters,
       adminPassword: parsed.adminPassword || d.adminPassword,
     };
   } catch {

@@ -115,30 +115,38 @@ function AuthPage() {
     }
   }
 
+  const wallPosters = typeof window !== "undefined" ? loadSettings().loginPosters : [];
+
+
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div
-          className="absolute inset-x-0 top-0 h-[200%] will-change-transform"
-          style={{ animation: "scroll-up 50s linear infinite" }}
-        >
-          <img
-            src={postersBg}
-            alt=""
-            aria-hidden
-            className="h-1/2 w-full object-cover opacity-70"
-            width={1920}
-            height={1280}
-          />
-          <img
-            src={postersBg}
-            alt=""
-            aria-hidden
-            className="h-1/2 w-full object-cover opacity-70"
-            width={1920}
-            height={1280}
-          />
-        </div>
+        {wallPosters.length > 0 ? (
+          <div
+            className="absolute inset-x-0 top-0 grid grid-cols-3 gap-2 p-2 will-change-transform sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8"
+            style={{ animation: "scroll-up 80s linear infinite" }}
+          >
+            {[...wallPosters, ...wallPosters, ...wallPosters].map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                className="aspect-[2/3] w-full rounded-md object-cover opacity-70"
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="absolute inset-x-0 top-0 h-[200%] will-change-transform"
+            style={{ animation: "scroll-up 50s linear infinite" }}
+          >
+            <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
+            <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
+          </div>
+        )}
         <div
           className="absolute inset-0"
           style={{
@@ -149,27 +157,28 @@ function AuthPage() {
       </div>
 
 
-      <header className="relative z-10 flex items-center justify-between px-6 py-5 sm:px-10">
-        <Logo className="h-10 w-auto" />
+      <header className="relative z-10 flex items-center justify-between px-6 py-4 sm:px-10">
+        <Logo className="h-8 w-auto" />
         <a
           href={`https://wa.me/${BRAND.whatsapp}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
+          className="hidden text-xs text-muted-foreground hover:text-foreground sm:inline"
         >
           Suporte: {BRAND.phone}
         </a>
       </header>
 
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-100px)] max-w-md items-center justify-center px-6 pb-12">
-        <div className="glass-card w-full rounded-2xl p-8 sm:p-10">
-          <div className="mb-7 text-center">
-            <Logo className="mx-auto mb-4 h-14 w-auto" />
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{texts.welcomeTitle}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-80px)] max-w-sm items-center justify-center px-4 pb-8">
+        <div className="glass-card w-full rounded-2xl p-5 sm:p-6">
+          <div className="mb-5 text-center">
+            <Logo className="mx-auto mb-3 h-10 w-auto" />
+            <h1 className="text-2xl font-bold tracking-tight">{texts.welcomeTitle}</h1>
+            <p className="mt-1 text-xs text-muted-foreground">
               {texts.welcomeSubtitle}
             </p>
           </div>
+
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
