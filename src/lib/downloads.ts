@@ -38,14 +38,28 @@ export function removeDownload(id: string) {
   window.dispatchEvent(new CustomEvent("misaplay-downloads-changed"));
 }
 
-export function triggerDownload(url: string, filename: string) {
+export async function triggerDownload(url: string, filename: string) {
   if (typeof window === "undefined") return;
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+  } catch {
+    // Fallback: same-tab navigation with download hint (no new tab)
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 }
+
