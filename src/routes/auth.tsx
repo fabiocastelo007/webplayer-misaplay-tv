@@ -132,7 +132,7 @@ function AuthPage() {
         {wallPosters.length > 0 ? (
           <div
             className="absolute inset-0 top-0 grid grid-cols-4 gap-0 will-change-transform sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10"
-            style={{ animation: "scroll-up 80s linear infinite" }}
+            style={{ animation: "scroll-up 25s linear infinite" }}
           >
             {Array.from({ length: 8 }).flatMap((_, dup) =>
               wallPosters.map((src, i) => (
@@ -150,7 +150,7 @@ function AuthPage() {
         ) : (
           <div
             className="absolute inset-x-0 top-0 h-[200%] will-change-transform"
-            style={{ animation: "scroll-up 50s linear infinite" }}
+            style={{ animation: "scroll-up 15s linear infinite" }}
           >
             <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
             <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
