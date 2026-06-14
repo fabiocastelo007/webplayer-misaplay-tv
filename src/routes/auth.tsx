@@ -3,13 +3,26 @@ import { useEffect, useState, type FormEvent, type ChangeEvent, type ReactNode }
 import { loadSettings, onSettingsChanged, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
-import { loadSession, saveSession, type XtreamUserInfo, type XtreamServerInfo, type XtreamPackage } from "@/lib/xtream";
+import {
+  loadSession,
+  saveSession,
+  type XtreamUserInfo,
+  type XtreamServerInfo,
+  type XtreamPackage,
+} from "@/lib/xtream";
 import { parseM3U, fetchM3U, saveM3USession } from "@/lib/m3u";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, ListVideo } from "lucide-react";
 import postersBg from "@/assets/posters-bg.jpg";
@@ -21,9 +34,17 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Acessar — Misaplay TV" },
-      { name: "description", content: "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e desporto." },
+      {
+        name: "description",
+        content:
+          "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e desporto.",
+      },
       { property: "og:title", content: "Acessar — Misaplay TV" },
-      { property: "og:description", content: "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e desporto." },
+      {
+        property: "og:description",
+        content:
+          "Entre com seu usuário e senha para assistir filmes, séries, TV ao vivo e desporto.",
+      },
     ],
   }),
   beforeLoad: () => {
@@ -90,9 +111,6 @@ function AuthPage() {
     return onSettingsChanged(sync);
   }, []);
 
-
-
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -133,10 +151,6 @@ function AuthPage() {
     }
   }
 
-  
-
-
-
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -155,7 +169,7 @@ function AuthPage() {
                   loading="lazy"
                   className="aspect-[2/3] w-full object-cover opacity-70"
                 />
-              ))
+              )),
             )}
           </div>
         ) : (
@@ -163,8 +177,18 @@ function AuthPage() {
             className="absolute inset-x-0 top-0 h-[200%] will-change-transform"
             style={{ animation: "scroll-up 15s linear infinite" }}
           >
-            <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
-            <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
+            <img
+              src={postersBg}
+              alt=""
+              aria-hidden
+              className="h-1/2 w-full object-cover opacity-70"
+            />
+            <img
+              src={postersBg}
+              alt=""
+              aria-hidden
+              className="h-1/2 w-full object-cover opacity-70"
+            />
           </div>
         )}
         <div
@@ -175,7 +199,6 @@ function AuthPage() {
           }}
         />
       </div>
-
 
       <header className="relative z-10 flex items-center justify-between px-6 py-4 sm:px-10">
         <Logo className="h-8 w-auto" />
@@ -194,11 +217,8 @@ function AuthPage() {
           <div className="mb-5 text-center">
             <Logo className="mx-auto mb-3 h-10 w-auto" />
             <h1 className="text-2xl font-bold tracking-tight">{texts.welcomeTitle}</h1>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {texts.welcomeSubtitle}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{texts.welcomeSubtitle}</p>
           </div>
-
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -209,7 +229,10 @@ function AuthPage() {
                 autoComplete="username"
                 placeholder="seu_usuario"
                 value={username}
-                onChange={(e) => { setUsername(e.target.value); setLoginError(""); }}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setLoginError("");
+                }}
                 required
                 maxLength={120}
                 className="h-12 bg-secondary/60 text-base"
@@ -223,7 +246,10 @@ function AuthPage() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setLoginError(""); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setLoginError("");
+                }}
                 required
                 maxLength={200}
                 className="h-12 bg-secondary/60 text-base"
@@ -313,7 +339,14 @@ function M3UImportButton({ onLoaded }: { onLoaded: (count: number) => void }) {
       dns: "m3u://local",
       username: "m3u",
       password: "m3u",
-      user_info: { username: "m3u", status: "Active", exp_date: null, is_trial: "0", active_cons: "0", max_connections: "1" } as XtreamUserInfo,
+      user_info: {
+        username: "m3u",
+        status: "Active",
+        exp_date: null,
+        is_trial: "0",
+        active_cons: "0",
+        max_connections: "1",
+      } as XtreamUserInfo,
       server_info: { url: "m3u://local", port: "0", server_protocol: "m3u" } as XtreamServerInfo,
       loggedAt: Date.now(),
     });
@@ -332,7 +365,8 @@ function M3UImportButton({ onLoaded }: { onLoaded: (count: number) => void }) {
         <DialogHeader>
           <DialogTitle>Importar lista M3U</DialogTitle>
           <DialogDescription>
-            Use esta opção se o Pacote Max não responder. A lista é carregada e armazenada no seu dispositivo.
+            Use esta opção se o Pacote Max não responder. A lista é carregada e armazenada no seu
+            dispositivo.
           </DialogDescription>
         </DialogHeader>
 
@@ -340,7 +374,11 @@ function M3UImportButton({ onLoaded }: { onLoaded: (count: number) => void }) {
           <div className="space-y-2">
             <Label>URL da lista (.m3u / .m3u8)</Label>
             <div className="flex gap-2">
-              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="http://..." />
+              <Input
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="http://..."
+              />
               <Button onClick={loadFromUrl} disabled={busy}>
                 {busy ? <Loader2 className="size-4 animate-spin" /> : "Carregar"}
               </Button>
