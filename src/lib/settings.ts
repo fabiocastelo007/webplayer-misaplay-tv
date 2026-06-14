@@ -33,8 +33,10 @@ export type AdminSettings = {
   brand: AdminBrand;
   colors: AdminColors;
   texts: AdminTexts;
+  loginPosters: string[];
   adminPassword: string;
 };
+
 
 const KEY = "misaplay_admin_settings";
 const ADMIN_FLAG = "misaplay_is_admin";
