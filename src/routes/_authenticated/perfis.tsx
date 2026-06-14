@@ -124,7 +124,7 @@ function PerfisPage() {
             >
               <div className="relative">
                 <div className="flex h-28 w-28 items-center justify-center rounded-full bg-secondary text-5xl ring-2 ring-transparent transition group-hover:ring-primary sm:h-32 sm:w-32">
-                  <span>{p.avatar || defaultAvatarFor(p.name)}</span>
+                  <AvatarView avatar={p.avatar} name={p.name} />
                 </div>
                 {p.pin && !manage ? (
                   <Lock className="absolute -top-1 right-0 size-5 rounded-full bg-background p-0.5 text-yellow-500" />
