@@ -35,7 +35,7 @@ export const Route = createFileRoute("/auth")({
 
 function renderSignupNote(template: string, phone: string, email: string, whatsapp: string) {
   // Replace {phone} with WhatsApp link, {email} with mailto link.
-  const parts: (string | JSX.Element)[] = [];
+  const parts: ReactNode[] = [];
   let i = 0;
   let key = 0;
   const regex = /\{(phone|email)\}/g;
