@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogOut, Film, Tv, Clapperboard, User, Home, Users, Shield } from "lucide-react";
+import { LogOut, Film, Tv, Clapperboard, User, Home, Users, Shield, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearSession, loadSession } from "@/lib/xtream";
 import { Logo } from "@/components/Logo";
