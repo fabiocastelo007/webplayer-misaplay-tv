@@ -133,9 +133,18 @@ export function PrimeShowcase({
   }, [activeCat, cats.data, featured.data, rowLimit, brokenVersion]);
 
   const heroPool = useMemo(
-    () => (featured.data ?? []).filter((i) => !!i.image && !brokenImages.has(i.image)).slice(0, 5),
+    () => {
+      const list = (featured.data ?? []).filter((i) => !!i.image && !brokenImages.has(i.image));
+      const score = (i: ShowcaseItem) => {
+        if (typeof i.added === "number" && i.added > 0) return i.added;
+        const y = i.year ? parseInt(String(i.year), 10) : 0;
+        return y ? y * 31_536_000 : 0; // approx year → seconds
+      };
+      return [...list].sort((a, b) => score(b) - score(a)).slice(0, 5);
+    },
     [featured.data, brokenVersion],
   );
+
   const [heroIdx, setHeroIdx] = useState(0);
   useEffect(() => {
     if (heroPool.length < 2) return;
