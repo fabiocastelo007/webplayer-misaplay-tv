@@ -259,18 +259,16 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
                       const files = Array.from(e.target.files ?? []);
                       if (!files.length) return;
                       const dataUrls = await Promise.all(
-                        files.map(
-                          (f) =>
-                            new Promise<string>((resolve, reject) => {
-                              const r = new FileReader();
-                              r.onload = () => resolve(String(r.result));
-                              r.onerror = reject;
-                              r.readAsDataURL(f);
-                            }),
-                        ),
+                        files.map((f) => compressImage(f, 400, 0.8)),
                       );
-                      setS({ ...s, loginPosters: [...s.loginPosters, ...dataUrls] });
-                      toast.success(`${dataUrls.length} imagem(ns) adicionada(s)`);
+                      const next = { ...s, loginPosters: [...s.loginPosters, ...dataUrls] };
+                      const ok = trySaveSettings(next);
+                      if (ok) {
+                        setS(next);
+                        toast.success(`${dataUrls.length} imagem(ns) adicionada(s) e guardada(s)`);
+                      } else {
+                        toast.error("Espaço cheio. Remova alguns cartazes antes de adicionar mais.");
+                      }
                       e.target.value = "";
                     }}
                   />
