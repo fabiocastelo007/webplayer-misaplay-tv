@@ -210,10 +210,7 @@ function AuthPage() {
             }}
           />
 
-          <p
-            className="mt-6 select-none text-center text-xs text-muted-foreground"
-            onClick={handleSecretTap}
-          >
+          <p className="mt-6 text-center text-xs text-muted-foreground">
             {renderSignupNote(texts.signupNote, BRAND.phone, BRAND.email, BRAND.whatsapp)}
           </p>
         </div>
