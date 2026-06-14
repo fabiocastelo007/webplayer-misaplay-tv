@@ -190,7 +190,7 @@ export function PrimeShowcase({
       {/* Category bar */}
       {!hideCategoryBar ? (
         <div className="sticky top-[64px] z-20 border-b border-border/40 bg-background/85 backdrop-blur md:top-[60px]">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
+          <div className="mx-auto flex max-h-[88px] max-w-7xl flex-wrap items-center gap-2 overflow-y-auto px-4 py-2 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <CatChip active={activeCat === "all"} onClick={() => { setActiveCat("all"); setQuery(""); }}>
               Em destaque
             </CatChip>
