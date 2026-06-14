@@ -256,11 +256,50 @@ function ProfileEditor({
   const [pin, setPin] = useState(initial?.pin ?? "");
   const [usePin, setUsePin] = useState(!!initial?.pin);
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const usingPhoto = isImageAvatar(avatar);
+
+  async function handlePickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem");
+      return;
+    }
+    try {
+      const data = await fileToAvatarDataUrl(f);
+      setAvatar(data);
+    } catch {
+      toast.error("Não foi possível carregar a imagem");
+    }
+  }
+
   return (
     <Modal title={initial ? "Editar perfil" : "Novo perfil"} onClose={onClose}>
       <div className="space-y-4">
         <div>
           <Label className="mb-2 block">Avatar</Label>
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary text-3xl">
+              <AvatarView avatar={avatar} name={name || "?"} />
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePickFile}
+            />
+            <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+              <Upload className="size-4" /> {usingPhoto ? "Trocar foto" : "Importar foto"}
+            </Button>
+            {usingPhoto ? (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAvatar(AVATARS[0])}>
+                Remover
+              </Button>
+            ) : null}
+          </div>
           <div className="flex flex-wrap gap-2">
             {AVATARS.map((a) => (
               <button
