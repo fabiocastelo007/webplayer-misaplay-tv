@@ -19,11 +19,20 @@ export type AdminColors = {
   accent: string;
 };
 
+export type AdminTexts = {
+  welcomeTitle: string;
+  welcomeSubtitle: string;
+  signupNote: string;
+  footerTagline: string;
+  supportHours: string;
+};
+
 export type AdminSettings = {
   servers: AdminServer[];
   plans: Plan[];
   brand: AdminBrand;
   colors: AdminColors;
+  texts: AdminTexts;
   adminPassword: string;
 };
 
@@ -39,12 +48,24 @@ export const DEFAULT_COLORS: AdminColors = {
 
 export const DEFAULT_ADMIN_PASSWORD = "misaplay2026";
 
+export const DEFAULT_TEXTS: AdminTexts = {
+  welcomeTitle: "BEM-VINDO",
+  welcomeSubtitle:
+    "Acesse com seu usuário e senha. Validamos automaticamente nos servidores Max e Premium.",
+  signupNote: "Não tem conta? Fale connosco no WhatsApp {phone}, {email}",
+  footerTagline:
+    "Misaplay TV — filmes, séries, TV ao vivo e desporto em um só lugar.",
+  supportHours:
+    "Renovações, dúvidas e suporte técnico via WhatsApp todos os dias das 08h às 22h.",
+};
+
 export function defaultSettings(): AdminSettings {
   return {
     servers: XTREAM_SERVERS.map((s) => ({ ...s })),
     plans: PLANS.map((p) => ({ ...p })),
     brand: { ...BRAND },
     colors: { ...DEFAULT_COLORS },
+    texts: { ...DEFAULT_TEXTS },
     adminPassword: DEFAULT_ADMIN_PASSWORD,
   };
 }
@@ -61,6 +82,7 @@ export function loadSettings(): AdminSettings {
       plans: parsed.plans?.length ? parsed.plans : d.plans,
       brand: { ...d.brand, ...(parsed.brand ?? {}) },
       colors: { ...d.colors, ...(parsed.colors ?? {}) },
+      texts: { ...d.texts, ...(parsed.texts ?? {}) },
       adminPassword: parsed.adminPassword || d.adminPassword,
     };
   } catch {
@@ -124,6 +146,12 @@ export function tryAdminLogin(password: string): boolean {
     return true;
   }
   return false;
+}
+
+export function grantAdmin() {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(ADMIN_FLAG, "1");
+  window.dispatchEvent(new CustomEvent(EVT));
 }
 
 export function adminLogout() {

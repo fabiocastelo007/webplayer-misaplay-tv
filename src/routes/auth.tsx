@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useState, type FormEvent, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ChangeEvent, type ReactNode } from "react";
+import { loadSettings, grantAdmin, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
 import { loadSession, saveSession, type XtreamUserInfo, type XtreamServerInfo, type XtreamPackage } from "@/lib/xtream";
@@ -32,12 +33,71 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function renderSignupNote(template: string, phone: string, email: string, whatsapp: string) {
+  // Replace {phone} with WhatsApp link, {email} with mailto link.
+  const parts: ReactNode[] = [];
+  let i = 0;
+  let key = 0;
+  const regex = /\{(phone|email)\}/g;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(template))) {
+    if (m.index > i) parts.push(template.slice(i, m.index));
+    if (m[1] === "phone") {
+      parts.push(
+        <a
+          key={key++}
+          href={`https://wa.me/${whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-primary hover:underline"
+        >
+          {phone}
+        </a>,
+      );
+    } else {
+      parts.push(
+        <a
+          key={key++}
+          href={`mailto:${email}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {email}
+        </a>,
+      );
+    }
+    i = m.index + m[0].length;
+  }
+  if (i < template.length) parts.push(template.slice(i));
+  return parts;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const login = useServerFn(xtreamLogin);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [texts, setTexts] = useState<AdminTexts>(DEFAULT_TEXTS);
+  useEffect(() => {
+    setTexts(loadSettings().texts);
+  }, []);
+
+  // Hidden admin trigger: 7 quick taps on the signup note grants admin and opens /admin.
+  const tapsRef = useRef<{ n: number; t: number }>({ n: 0, t: 0 });
+  function handleSecretTap() {
+    const now = Date.now();
+    if (now - tapsRef.current.t > 2000) tapsRef.current.n = 0;
+    tapsRef.current.t = now;
+    tapsRef.current.n += 1;
+    if (tapsRef.current.n >= 7) {
+      tapsRef.current.n = 0;
+      grantAdmin();
+      toast.success("Acesso de administrador concedido");
+      navigate({ to: "/admin" });
+    }
+  }
+
+
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -105,9 +165,9 @@ function AuthPage() {
         <div className="glass-card w-full rounded-2xl p-8 sm:p-10">
           <div className="mb-7 text-center">
             <Logo className="mx-auto mb-4 h-14 w-auto" />
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">BEM-VINDO</h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{texts.welcomeTitle}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Acesse com seu usuário e senha. Validamos automaticamente nos servidores Max e Premium.
+              {texts.welcomeSubtitle}
             </p>
           </div>
 
@@ -164,16 +224,11 @@ function AuthPage() {
             }}
           />
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Não tem conta? Fale connosco no WhatsApp{" "}
-            <a
-              href={`https://wa.me/${BRAND.whatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-primary hover:underline"
-            >
-              {BRAND.phone}
-            </a>
+          <p
+            className="mt-6 select-none text-center text-xs text-muted-foreground"
+            onClick={handleSecretTap}
+          >
+            {renderSignupNote(texts.signupNote, BRAND.phone, BRAND.email, BRAND.whatsapp)}
           </p>
         </div>
       </section>
