@@ -20,9 +20,7 @@ export type LoginResult =
 const loginSchema = z.object({
   username: z.string().trim().min(1).max(120),
   password: z.string().min(1).max(200),
-  servers: z
-    .array(z.object({ id: z.string(), label: z.string(), dns: z.string() }))
-    .optional(),
+  servers: z.array(z.object({ id: z.string(), label: z.string(), dns: z.string() })).optional(),
 });
 
 type LoginServer = { id: XtreamPackage; label: string; dns: string };
@@ -34,7 +32,11 @@ type AttemptOk = {
     server_info?: Record<string, unknown>;
   };
 };
-type AttemptResult = AttemptOk | { kind: "invalid" } | { kind: "expired"; status: string } | { kind: "unreachable"; status?: number };
+type AttemptResult =
+  | AttemptOk
+  | { kind: "invalid" }
+  | { kind: "expired"; status: string }
+  | { kind: "unreachable"; status?: number };
 
 function normalizeDns(dns: string): string | undefined {
   try {
@@ -71,7 +73,10 @@ async function tryServer(dns: string, username: string, password: string): Promi
       return { kind: "unreachable", status: res.status };
     }
     const text = await res.text();
-    let json: { user_info?: { auth?: number | string; status?: string }; server_info?: Record<string, unknown> };
+    let json: {
+      user_info?: { auth?: number | string; status?: string };
+      server_info?: Record<string, unknown>;
+    };
     try {
       json = JSON.parse(text);
     } catch {
@@ -79,7 +84,9 @@ async function tryServer(dns: string, username: string, password: string): Promi
     }
     if (!json?.user_info) return { kind: "invalid" };
     const status = String(json.user_info.status ?? "").toLowerCase();
-    if (status && status !== "active") return { kind: "expired", status: String(json.user_info.status) };
+    if (status && status !== "active") {
+      return { kind: "expired", status: String(json.user_info.status) };
+    }
     if (Number(json.user_info.auth) !== 1) return { kind: "invalid" };
     return { kind: "ok", json: json as AttemptOk["json"] };
   } catch {
