@@ -32,7 +32,7 @@ type AttemptOk = {
     server_info?: Record<string, unknown>;
   };
 };
-type AttemptResult = AttemptOk | { kind: "invalid" } | { kind: "unreachable"; status?: number };
+type AttemptResult = AttemptOk | { kind: "invalid" } | { kind: "expired"; status: string } | { kind: "unreachable"; status?: number };
 
 async function tryServer(dns: string, username: string, password: string): Promise<AttemptResult> {
   const url = `${dns}/player_api.php?username=${encodeURIComponent(
@@ -53,6 +53,8 @@ async function tryServer(dns: string, username: string, password: string): Promi
     }
     if (!json?.user_info) return { kind: "invalid" };
     if (Number(json.user_info.auth) !== 1) return { kind: "invalid" };
+    const status = String(json.user_info.status ?? "").toLowerCase();
+    if (status && status !== "active") return { kind: "expired", status: String(json.user_info.status) };
     return { kind: "ok", json: json as AttemptOk["json"] };
   } catch {
     return { kind: "unreachable" };
@@ -68,13 +70,6 @@ export const xtreamLogin = createServerFn({ method: "POST" })
     for (const srv of servers) {
       const r = await tryServer(srv.dns, username, password);
       if (r.kind === "ok") {
-        const status = String(r.json.user_info.status ?? "").toLowerCase();
-        if (status && status !== "active") {
-          return {
-            ok: false,
-            error: `Conta encontrada em ${srv.label}, mas status: ${r.json.user_info.status}`,
-          };
-        }
         return {
           ok: true,
           package: srv.id,
@@ -84,6 +79,9 @@ export const xtreamLogin = createServerFn({ method: "POST" })
           user_info: r.json.user_info as unknown as JsonObject,
           server_info: (r.json.server_info ?? {}) as unknown as JsonObject,
         };
+      }
+      if (r.kind === "expired") {
+        return { ok: false, error: "expired" };
       }
       issues.push({
         label: srv.label,
