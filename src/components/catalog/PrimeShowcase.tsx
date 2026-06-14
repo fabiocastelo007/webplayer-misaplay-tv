@@ -153,6 +153,14 @@ export function PrimeShowcase({
   }, [heroPool.length]);
   const hero = heroPool[heroIdx] ?? featured.data?.[0];
 
+  const globalSearchResults = useMemo(() => {
+    void brokenVersion;
+    const q = query.trim().toLowerCase();
+    if (activeCat !== "all" || !q) return [];
+    return (featured.data ?? [])
+      .filter((i) => !!i.image && !brokenImages.has(i.image) && i.name.toLowerCase().includes(q));
+  }, [activeCat, query, featured.data, brokenVersion]);
+
   const filtered = useMemo(() => {
     void brokenVersion;
     if (activeCat === "all") return [];
@@ -162,6 +170,7 @@ export function PrimeShowcase({
     if (!q) return list;
     return list.filter((i) => i.name.toLowerCase().includes(q));
   }, [activeCat, categoryView.data, query, favoriteItems, brokenVersion]);
+
 
   return (
     <div>
