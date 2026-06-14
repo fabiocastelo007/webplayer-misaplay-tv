@@ -1,0 +1,9 @@
+{
+  "name": "MisaPlay",
+  "productName": "MisaPlay",
+  "version": "1.0.0",
+  "description": "MisaPlay desktop (portátil)",
+  "main": "main.cjs",
+  "author": "MisaPlay",
+  "license": "UNLICENSED"
+}
