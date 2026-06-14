@@ -28,7 +28,7 @@ function SeriesPage() {
             name: s.name,
             image: s.cover,
             category_id: s.category_id,
-            plot: s.genre,
+            plot: s.plot ?? s.genre,
           }));
         }}
         onPlay={open}
