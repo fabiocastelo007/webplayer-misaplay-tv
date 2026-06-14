@@ -63,7 +63,7 @@ export function Footer() {
             Suporte
           </h3>
           <p className="mt-3 text-sm text-muted-foreground">
-            Renovações, dúvidas e suporte técnico via WhatsApp todos os dias das 08h às 22h.
+            {texts.supportHours}
           </p>
         </div>
       </div>
