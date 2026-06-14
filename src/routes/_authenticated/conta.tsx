@@ -59,7 +59,10 @@ function ContaPage() {
     setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0 } }));
     try {
       const res = await fetch(proxied);
-      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok || !res.body) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
       const total = Number(res.headers.get("content-length") || 0);
       const reader = res.body.getReader();
       const chunks: BlobPart[] = [];
