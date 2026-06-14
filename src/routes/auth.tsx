@@ -150,7 +150,7 @@ function AuthPage() {
         ) : (
           <div
             className="absolute inset-x-0 top-0 h-[200%] will-change-transform"
-            style={{ animation: "scroll-up 50s linear infinite" }}
+            style={{ animation: "scroll-up 15s linear infinite" }}
           >
             <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
             <img src={postersBg} alt="" aria-hidden className="h-1/2 w-full object-cover opacity-70" />
