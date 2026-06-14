@@ -41,6 +41,7 @@ function ContaPage() {
 
   const [selectedPlan, setSelectedPlan] = useState<Plan>(PLANS[0]);
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const [progress, setProgress] = useState<Record<string, { loaded: number; total: number; done?: boolean; error?: string }>>({});
 
   useEffect(() => {
     setDownloads(listDownloads());
@@ -48,6 +49,56 @@ function ContaPage() {
     window.addEventListener("misaplay-downloads-changed", handler);
     return () => window.removeEventListener("misaplay-downloads-changed", handler);
   }, []);
+
+  const downloadWithProgress = async (item: DownloadItem) => {
+    const extMatch = item.url.match(/\.([a-zA-Z0-9]{2,4})(?:\?|$)/);
+    const ext = extMatch ? extMatch[1] : "mp4";
+    const safe = item.title.replace(/[^a-zA-Z0-9-_. ]/g, "").slice(0, 100) || "video";
+    const filename = `${safe}.${ext}`;
+    const proxied = `/api/public/download?url=${encodeURIComponent(item.url)}&filename=${encodeURIComponent(filename)}`;
+    setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0 } }));
+    try {
+      const res = await fetch(proxied);
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      const total = Number(res.headers.get("content-length") || 0);
+      const reader = res.body.getReader();
+      const chunks: BlobPart[] = [];
+      let loaded = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          loaded += value.byteLength;
+          setProgress((p) => ({ ...p, [item.id]: { loaded, total } }));
+        }
+      }
+      const blob = new Blob(chunks);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+      setProgress((p) => ({ ...p, [item.id]: { loaded, total: total || loaded, done: true } }));
+      toast.success(`Download concluído: ${item.title}`);
+    } catch (e) {
+      setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, error: (e as Error).message } }));
+      toast.error("Falha no download. Tente novamente.");
+    }
+  };
+
+  const fmtBytes = (n: number) => {
+    if (!n) return "0 B";
+    const u = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    let v = n;
+    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+    return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+  };
 
   const handleRenew = () => {
     const link = whatsappRenewalLink({ username, plan: selectedPlan, pkg });
