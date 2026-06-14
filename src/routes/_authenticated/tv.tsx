@@ -23,6 +23,13 @@ function TvPage() {
     staleTime: 5 * 60_000,
   });
   const [activeCat, setActiveCat] = useState<string | "all" | typeof FAV_CAT>("all");
+  const [autoPicked, setAutoPicked] = useState(false);
+  useEffect(() => {
+    if (autoPicked || !cats.data) return;
+    const angola = cats.data.find((c) => /angola/i.test(c.category_name));
+    if (angola) setActiveCat(angola.category_id);
+    setAutoPicked(true);
+  }, [cats.data, autoPicked]);
   const streams = useQuery({
     queryKey: ["xtream", "live", "streams", activeCat === FAV_CAT ? "all" : activeCat],
     queryFn: () =>

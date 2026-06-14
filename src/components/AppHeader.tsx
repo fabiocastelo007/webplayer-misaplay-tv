@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogOut, Film, Tv, Clapperboard, User, Home, Users, Shield } from "lucide-react";
+import { LogOut, Film, Tv, Clapperboard, User, Home, Users, Shield, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearSession, loadSession } from "@/lib/xtream";
 import { Logo } from "@/components/Logo";
@@ -12,6 +12,9 @@ export function AppHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const session = typeof window !== "undefined" ? loadSession() : null;
   const pkgLabel = session?.package === "MAX" ? "Pacote Max" : "Pacote Premium";
+  const expTs = session?.user_info?.exp_date ? Number(session.user_info.exp_date) * 1000 : null;
+  const daysLeft = expTs ? Math.ceil((expTs - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  const showExpiryAlert = daysLeft !== null && daysLeft <= 5;
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [admin, setAdmin] = useState(false);
@@ -81,6 +84,22 @@ export function AppHeader() {
               <span className="hidden max-w-[120px] truncate sm:inline">{profile.name}</span>
               <Users className="size-3.5 text-muted-foreground" />
             </button>
+          ) : null}
+          {showExpiryAlert ? (
+            <Link
+              to="/conta"
+              title={
+                daysLeft! > 0
+                  ? `Sua assinatura expira em ${daysLeft} dia${daysLeft === 1 ? "" : "s"}`
+                  : "Sua assinatura expirou"
+              }
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-amber-400 hover:bg-secondary/60"
+            >
+              <Bell className="size-5 animate-pulse" />
+              <span className="absolute -right-0.5 -top-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white">
+                {daysLeft! > 0 ? daysLeft : "!"}
+              </span>
+            </Link>
           ) : null}
           <Button asChild variant={pathname.startsWith("/conta") ? "secondary" : "ghost"} size="sm">
             <Link to="/conta">
