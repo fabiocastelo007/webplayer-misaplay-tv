@@ -33,6 +33,10 @@ export type ShowcaseItem = {
   category_id: string;
   ext?: string;
   plot?: string;
+  year?: string | number;
+  duration?: string;
+  rating?: number;
+  genre?: string;
 };
 
 type Props = {
