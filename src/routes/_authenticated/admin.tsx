@@ -205,6 +205,40 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           <Button size="sm" onClick={() => persist(s)}><Save className="size-4" /> Guardar</Button>
         </TabsContent>
 
+        <TabsContent value="texts" className="space-y-3">
+          <div className="glass-card grid gap-3 rounded-xl p-4">
+            {([
+              ["welcomeTitle", "Título da página de login", "input"],
+              ["welcomeSubtitle", "Subtítulo da página de login", "textarea"],
+              ["signupNote", "Nota de inscrição (use {phone} e {email})", "textarea"],
+              ["footerTagline", "Slogan do rodapé", "textarea"],
+              ["supportHours", "Texto de suporte (rodapé)", "textarea"],
+            ] as const).map(([k, label, kind]) => (
+              <div key={k} className="space-y-1">
+                <Label>{label}</Label>
+                {kind === "textarea" ? (
+                  <textarea
+                    className="min-h-[68px] w-full rounded-md border border-input bg-secondary/60 p-2 text-sm"
+                    value={s.texts[k]}
+                    onChange={(e) => setS({ ...s, texts: { ...s.texts, [k]: e.target.value } })}
+                  />
+                ) : (
+                  <Input
+                    value={s.texts[k]}
+                    onChange={(e) => setS({ ...s, texts: { ...s.texts, [k]: e.target.value } })}
+                  />
+                )}
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">
+              Dica: na "Nota de inscrição", os marcadores <code>{"{phone}"}</code> e <code>{"{email}"}</code> são
+              substituídos automaticamente pelos contactos definidos na aba <strong>Contactos</strong>.
+            </p>
+          </div>
+          <Button size="sm" onClick={() => persist(s)}><Save className="size-4" /> Guardar</Button>
+        </TabsContent>
+
+
         <TabsContent value="colors" className="space-y-3">
           <div className="glass-card grid gap-3 rounded-xl p-4 sm:grid-cols-3">
             {([
