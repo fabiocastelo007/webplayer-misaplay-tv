@@ -115,10 +115,9 @@ function AuthPage() {
     }
   }
 
-  const posters = texts && (texts as unknown as { _posters?: string[] })._posters ? [] : [];
-  void posters;
-  const loginPosters = (typeof window !== "undefined" ? loadSettings().loginPosters : []) ?? [];
-  const wallPosters = loginPosters.length > 0 ? loginPosters : [];
+  const wallPosters = typeof window !== "undefined" ? loadSettings().loginPosters : [];
+
+
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
