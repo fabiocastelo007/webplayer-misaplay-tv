@@ -35,7 +35,7 @@ function FilmesPage() {
             image: v.stream_icon,
             category_id: v.category_id,
             ext: v.container_extension,
-            plot: v.plot,
+            plot: (v as VodStream & { plot?: string }).plot,
           }));
 
         }}
