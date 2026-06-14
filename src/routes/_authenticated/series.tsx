@@ -19,8 +19,9 @@ function SeriesPage() {
       <PrimeShowcase
         title="Séries"
         kind="series"
-        hideCategoryBar
+        rowLimit={999}
         fetchCategories={() => xtream.seriesCategories()}
+
         fetchItems={async (cat) => {
           const list = await xtream.series(cat);
           return list.map((s: Serie) => {
