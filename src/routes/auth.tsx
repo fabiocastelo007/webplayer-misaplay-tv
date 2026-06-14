@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent, type ChangeEvent, type ReactNode } from "react";
-import { loadSettings, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
+import { loadSettings, onSettingsChanged, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
 import { loadSession, saveSession, type XtreamUserInfo, type XtreamServerInfo, type XtreamPackage } from "@/lib/xtream";
