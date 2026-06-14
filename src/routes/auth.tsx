@@ -117,15 +117,28 @@ function AuthPage() {
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
-      <div className="absolute inset-0 -z-10">
-        <img
-          src={postersBg}
-          alt=""
-          aria-hidden
-          className="h-full w-full object-cover opacity-70"
-          width={1920}
-          height={1280}
-        />
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute inset-x-0 top-0 h-[200%] will-change-transform"
+          style={{ animation: "scroll-up 50s linear infinite" }}
+        >
+          <img
+            src={postersBg}
+            alt=""
+            aria-hidden
+            className="h-1/2 w-full object-cover opacity-70"
+            width={1920}
+            height={1280}
+          />
+          <img
+            src={postersBg}
+            alt=""
+            aria-hidden
+            className="h-1/2 w-full object-cover opacity-70"
+            width={1920}
+            height={1280}
+          />
+        </div>
         <div
           className="absolute inset-0"
           style={{
@@ -134,6 +147,7 @@ function AuthPage() {
           }}
         />
       </div>
+
 
       <header className="relative z-10 flex items-center justify-between px-6 py-5 sm:px-10">
         <Logo className="h-10 w-auto" />
