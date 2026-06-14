@@ -37,7 +37,9 @@ export type ShowcaseItem = {
   duration?: string;
   rating?: number;
   genre?: string;
+  added?: number;
 };
+
 
 type Props = {
   title: string;
