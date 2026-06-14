@@ -103,7 +103,7 @@ export const xtreamLogin = createServerFn({ method: "POST" })
         error: `Não foi possível contactar os servidores agora. ${detalhe}. Tente novamente em instantes.`,
       };
     }
-    return { ok: false, error: `Usuário ou senha inválidos. (${detalhe})` };
+    return { ok: false, error: "not_found" };
   });
 
 // --- Catalog proxy ---
