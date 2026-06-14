@@ -78,8 +78,12 @@ export function AppHeader() {
               title="Trocar perfil"
               className="flex items-center gap-2 rounded-full bg-secondary/60 py-1 pl-1 pr-3 text-sm hover:bg-secondary"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background text-base">
-                {profile.avatar ?? "👤"}
+              <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-background text-base">
+                {profile.avatar && (profile.avatar.startsWith("data:") || profile.avatar.startsWith("http")) ? (
+                  <img src={profile.avatar} alt={profile.name} className="h-full w-full object-cover" />
+                ) : (
+                  <span>{profile.avatar ?? "👤"}</span>
+                )}
               </span>
               <span className="hidden max-w-[120px] truncate sm:inline">{profile.name}</span>
               <Users className="size-3.5 text-muted-foreground" />
