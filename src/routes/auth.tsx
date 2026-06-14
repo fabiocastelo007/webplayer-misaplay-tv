@@ -186,16 +186,11 @@ function AuthPage() {
             }}
           />
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Não tem conta? Fale connosco no WhatsApp{" "}
-            <a
-              href={`https://wa.me/${BRAND.whatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-primary hover:underline"
-            >
-              {BRAND.phone}
-            </a>
+          <p
+            className="mt-6 select-none text-center text-xs text-muted-foreground"
+            onClick={handleSecretTap}
+          >
+            {renderSignupNote(texts.signupNote, BRAND.phone, BRAND.email, BRAND.whatsapp)}
           </p>
         </div>
       </section>
