@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent, type ChangeEvent, type ReactNode } from "react";
-import { loadSettings, grantAdmin, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
+import { useEffect, useState, type FormEvent, type ChangeEvent, type ReactNode } from "react";
+import { loadSettings, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
 import { loadSession, saveSession, type XtreamUserInfo, type XtreamServerInfo, type XtreamPackage } from "@/lib/xtream";
@@ -82,20 +82,6 @@ function AuthPage() {
     setTexts(loadSettings().texts);
   }, []);
 
-  // Hidden admin trigger: 7 quick taps on the signup note grants admin and opens /admin.
-  const tapsRef = useRef<{ n: number; t: number }>({ n: 0, t: 0 });
-  function handleSecretTap() {
-    const now = Date.now();
-    if (now - tapsRef.current.t > 2000) tapsRef.current.n = 0;
-    tapsRef.current.t = now;
-    tapsRef.current.n += 1;
-    if (tapsRef.current.n >= 7) {
-      tapsRef.current.n = 0;
-      grantAdmin();
-      toast.success("Acesso de administrador concedido");
-      navigate({ to: "/admin" });
-    }
-  }
 
 
 
@@ -224,10 +210,7 @@ function AuthPage() {
             }}
           />
 
-          <p
-            className="mt-6 select-none text-center text-xs text-muted-foreground"
-            onClick={handleSecretTap}
-          >
+          <p className="mt-6 text-center text-xs text-muted-foreground">
             {renderSignupNote(texts.signupNote, BRAND.phone, BRAND.email, BRAND.whatsapp)}
           </p>
         </div>
