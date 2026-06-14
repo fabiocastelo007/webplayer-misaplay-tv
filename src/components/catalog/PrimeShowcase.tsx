@@ -318,12 +318,13 @@ function HeroBanner({
         <img
           src={item.image}
           alt={item.name}
-          className="absolute inset-0 h-full w-full scale-110 object-cover blur-md opacity-60"
+          className="absolute inset-0 h-full w-full scale-105 object-cover blur-[2px] opacity-90"
           aria-hidden
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/55 to-background/10" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+
       <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-12 sm:px-6">
         <div className="grid w-full gap-6 sm:grid-cols-[200px_1fr] sm:items-end">
           {item.image ? (
