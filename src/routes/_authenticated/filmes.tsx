@@ -45,7 +45,9 @@ function FilmesPage() {
               duration: runtime,
               rating: v.rating_5based,
               genre: x.genre,
+              added: v.added ? Number(v.added) : undefined,
             };
+
           });
         }}
         onPlay={play}
