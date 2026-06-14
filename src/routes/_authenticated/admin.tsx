@@ -241,7 +241,50 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         </TabsContent>
 
 
+        <TabsContent value="posters" className="space-y-3">
+          <div className="glass-card space-y-3 rounded-xl p-4">
+            <div className="space-y-1">
+              <Label>URLs dos cartazes da página de login (um por linha)</Label>
+              <textarea
+                className="min-h-[260px] w-full rounded-md border border-input bg-secondary/60 p-2 font-mono text-xs"
+                value={s.loginPosters.join("\n")}
+                onChange={(e) =>
+                  setS({
+                    ...s,
+                    loginPosters: e.target.value
+                      .split("\n")
+                      .map((l) => l.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="https://image.tmdb.org/t/p/w500/..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Cole URLs de cartazes (filmes, séries e desenhos de 2026). Recomendado: TMDB
+                <code className="mx-1">image.tmdb.org/t/p/w500/...</code>. Total actual:{" "}
+                <strong>{s.loginPosters.length}</strong>.
+              </p>
+            </div>
+            {s.loginPosters.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+                {s.loginPosters.slice(0, 24).map((u, i) => (
+                  <img
+                    key={i}
+                    src={u}
+                    alt=""
+                    className="aspect-[2/3] w-full rounded-md object-cover"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          <Button size="sm" onClick={() => persist(s)}>
+            <Save className="size-4" /> Guardar
+          </Button>
+        </TabsContent>
+
         <TabsContent value="colors" className="space-y-3">
+
           <div className="glass-card grid gap-3 rounded-xl p-4 sm:grid-cols-3">
             {([
               ["background", "Fundo"],
