@@ -124,19 +124,21 @@ function AuthPage() {
       <div className="absolute inset-0 -z-10 overflow-hidden">
         {wallPosters.length > 0 ? (
           <div
-            className="absolute inset-x-0 top-0 grid grid-cols-3 gap-2 p-2 will-change-transform sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8"
+            className="absolute inset-0 top-0 grid grid-cols-4 gap-0 will-change-transform sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10"
             style={{ animation: "scroll-up 80s linear infinite" }}
           >
-            {[...wallPosters, ...wallPosters, ...wallPosters].map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt=""
-                aria-hidden
-                loading="lazy"
-                className="aspect-[2/3] w-full rounded-md object-cover opacity-70"
-              />
-            ))}
+            {Array.from({ length: 8 }).flatMap((_, dup) =>
+              wallPosters.map((src, i) => (
+                <img
+                  key={`${dup}-${i}`}
+                  src={src}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  className="aspect-[2/3] w-full object-cover opacity-70"
+                />
+              ))
+            )}
           </div>
         ) : (
           <div
