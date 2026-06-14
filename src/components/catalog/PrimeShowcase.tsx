@@ -341,6 +341,26 @@ function HeroBanner({
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{title}</p>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-5xl">{item.name}</h1>
+            {(item.rating || item.year || item.duration || item.genre) ? (
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/80">
+                {item.rating ? (
+                  <span className="inline-flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={
+                          "size-3.5 " +
+                          (i < Math.round((item.rating ?? 0)) ? "fill-yellow-400 text-yellow-400" : "text-foreground/30")
+                        }
+                      />
+                    ))}
+                  </span>
+                ) : null}
+                {item.year ? <span>{item.year}</span> : null}
+                {item.duration ? <span>{item.duration}</span> : null}
+                {item.genre ? <span>{item.genre}</span> : null}
+              </div>
+            ) : null}
             {item.plot ? (
               <p className="mt-3 line-clamp-3 text-sm text-foreground/80 sm:text-base">{item.plot}</p>
             ) : null}
