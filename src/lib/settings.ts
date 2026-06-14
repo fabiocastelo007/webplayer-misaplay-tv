@@ -102,6 +102,7 @@ export function loadSettings(): AdminSettings {
       brand: { ...d.brand, ...(parsed.brand ?? {}) },
       colors: { ...d.colors, ...(parsed.colors ?? {}) },
       texts: { ...d.texts, ...(parsed.texts ?? {}) },
+      loginPosters: parsed.loginPosters?.length ? parsed.loginPosters : d.loginPosters,
       adminPassword: parsed.adminPassword || d.adminPassword,
     };
   } catch {
