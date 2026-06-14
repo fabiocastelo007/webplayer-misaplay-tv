@@ -190,7 +190,7 @@ export function PrimeShowcase({
       {/* Category bar */}
       {!hideCategoryBar ? (
         <div className="sticky top-[64px] z-20 border-b border-border/40 bg-background/85 backdrop-blur md:top-[60px]">
-          <div className="mx-auto flex max-h-[88px] max-w-7xl flex-wrap items-center gap-2 overflow-y-auto px-4 py-2 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mx-auto flex max-h-[88px] max-w-7xl flex-wrap items-center justify-center gap-2 overflow-y-auto px-4 py-2 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <CatChip active={activeCat === "all"} onClick={() => { setActiveCat("all"); setQuery(""); }}>
               Em destaque
             </CatChip>
@@ -214,7 +214,7 @@ export function PrimeShowcase({
             <ErrorBox error={featured.error as Error} />
           ) : (
             <div className="space-y-10">
-              <div className="relative max-w-xl">
+              <div className="relative mx-auto max-w-xl">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder={kind === "series" ? "Buscar séries..." : kind === "vod" ? "Buscar filmes..." : "Buscar..."}
@@ -277,13 +277,13 @@ export function PrimeShowcase({
 
         ) : (
           <>
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-2xl font-bold tracking-tight">
+            <div className="mb-5 flex flex-col items-center gap-3">
+              <h2 className="text-center text-2xl font-bold tracking-tight">
                 {activeCat === "favorites"
                   ? "Os meus favoritos"
                   : cats.data?.find((c) => c.category_id === activeCat)?.category_name ?? title}
               </h2>
-              <div className="relative max-w-sm flex-1">
+              <div className="relative w-full max-w-sm">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
