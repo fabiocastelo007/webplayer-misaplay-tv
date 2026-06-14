@@ -110,6 +110,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           <TabsTrigger value="servers">Servidores</TabsTrigger>
           <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="brand">Contactos</TabsTrigger>
+          <TabsTrigger value="texts">Textos</TabsTrigger>
           <TabsTrigger value="colors">Cores</TabsTrigger>
           <TabsTrigger value="security">Segurança</TabsTrigger>
         </TabsList>
