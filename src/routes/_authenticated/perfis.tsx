@@ -27,6 +27,40 @@ export const Route = createFileRoute("/_authenticated/perfis")({
 
 const AVATARS = ["🦸", "👩", "🧑", "👦", "👧", "🐱", "🐶", "🦊", "🐼", "🦁", "🐯", "🐵"];
 
+function isImageAvatar(a?: string) {
+  return !!a && (a.startsWith("data:") || a.startsWith("http"));
+}
+
+function AvatarView({ avatar, name, className }: { avatar?: string; name: string; className?: string }) {
+  if (isImageAvatar(avatar)) {
+    return <img src={avatar} alt={name} className={"h-full w-full rounded-full object-cover " + (className ?? "")} />;
+  }
+  return <span>{avatar || defaultAvatarFor(name)}</span>;
+}
+
+async function fileToAvatarDataUrl(file: File, size = 256): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    const scale = Math.max(size / img.width, size / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 function PerfisPage() {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
