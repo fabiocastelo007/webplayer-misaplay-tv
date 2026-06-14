@@ -18,6 +18,7 @@ import { Route as AuthenticatedPerfisRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFilmesRouteImport } from './routes/_authenticated/filmes'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicDownloadRouteImport } from './routes/api/public/download'
 import { Route as AuthenticatedSerieIdRouteImport } from './routes/_authenticated/serie.$id'
 import { Route as AuthenticatedWatchTypeIdRouteImport } from './routes/_authenticated/watch.$type.$id'
 
@@ -65,6 +66,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicDownloadRoute = ApiPublicDownloadRouteImport.update({
+  id: '/api/public/download',
+  path: '/api/public/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedSerieIdRoute = AuthenticatedSerieIdRouteImport.update({
   id: '/serie/$id',
   path: '/serie/$id',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/series': typeof AuthenticatedSeriesRoute
   '/tv': typeof AuthenticatedTvRoute
   '/serie/$id': typeof AuthenticatedSerieIdRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
   '/watch/$type/$id': typeof AuthenticatedWatchTypeIdRoute
 }
 export interface FileRoutesByTo {
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/tv': typeof AuthenticatedTvRoute
   '/': typeof AuthenticatedIndexRoute
   '/serie/$id': typeof AuthenticatedSerieIdRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
   '/watch/$type/$id': typeof AuthenticatedWatchTypeIdRoute
 }
 export interface FileRoutesById {
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/tv': typeof AuthenticatedTvRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/serie/$id': typeof AuthenticatedSerieIdRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
   '/_authenticated/watch/$type/$id': typeof AuthenticatedWatchTypeIdRoute
 }
 export interface FileRouteTypes {
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/series'
     | '/tv'
     | '/serie/$id'
+    | '/api/public/download'
     | '/watch/$type/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/tv'
     | '/'
     | '/serie/$id'
+    | '/api/public/download'
     | '/watch/$type/$id'
   id:
     | '__root__'
@@ -152,12 +163,14 @@ export interface FileRouteTypes {
     | '/_authenticated/tv'
     | '/_authenticated/'
     | '/_authenticated/serie/$id'
+    | '/api/public/download'
     | '/_authenticated/watch/$type/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicDownloadRoute: typeof ApiPublicDownloadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/download': {
+      id: '/api/public/download'
+      path: '/api/public/download'
+      fullPath: '/api/public/download'
+      preLoaderRoute: typeof ApiPublicDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/serie/$id': {
       id: '/_authenticated/serie/$id'
       path: '/serie/$id'
@@ -272,6 +292,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicDownloadRoute: ApiPublicDownloadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

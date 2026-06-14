@@ -40,26 +40,16 @@ export function removeDownload(id: string) {
 
 export async function triggerDownload(url: string, filename: string) {
   if (typeof window === "undefined") return;
-  try {
-    const res = await fetch(url, { mode: "cors" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
-  } catch {
-    // Fallback: same-tab navigation with download hint (no new tab)
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+  // Route through our server proxy so the response carries
+  // Content-Disposition: attachment and the browser saves the file
+  // directly instead of opening the video in a new tab.
+  const proxied = `/api/public/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.src = proxied;
+  document.body.appendChild(iframe);
+  setTimeout(() => {
+    try { document.body.removeChild(iframe); } catch { /* ignore */ }
+  }, 60_000);
 }
 
