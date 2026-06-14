@@ -219,38 +219,76 @@ function ContaPage() {
             </div>
           ) : (
             <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-              {downloads.map((d) => (
-                <li
-                  key={d.id}
-                  className="flex items-center gap-3 rounded-xl bg-secondary/50 p-3 ring-1 ring-border/40"
-                >
-                  <div className="size-16 shrink-0 overflow-hidden rounded-md bg-secondary">
-                    {d.image ? (
-                      <img src={d.image} alt={d.title} className="h-full w-full object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{d.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {d.kind === "movie" ? "Filme" : "Episódio"} ·{" "}
-                      {new Date(d.addedAt).toLocaleDateString("pt-AO")}
-                    </p>
-                  </div>
-                  <Button asChild variant="ghost" size="icon" title="Abrir/Reproduzir">
-                    <a href={d.url} target="_blank" rel="noopener noreferrer">
-                      <Play className="size-4" />
-                    </a>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Remover da lista"
-                    onClick={() => removeDownload(d.id)}
+              {downloads.map((d) => {
+                const pr = progress[d.id];
+                const pct = pr && pr.total > 0 ? Math.min(100, (pr.loaded / pr.total) * 100) : pr?.done ? 100 : 0;
+                const active = !!pr && !pr.done && !pr.error;
+                return (
+                  <li
+                    key={d.id}
+                    className="flex flex-col gap-2 rounded-xl bg-secondary/50 p-3 ring-1 ring-border/40"
                   >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </li>
-              ))}
+                    <div className="flex items-center gap-3">
+                      <div className="size-16 shrink-0 overflow-hidden rounded-md bg-secondary">
+                        {d.image ? (
+                          <img src={d.image} alt={d.title} className="h-full w-full object-cover" />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{d.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {d.kind === "movie" ? "Filme" : "Episódio"} ·{" "}
+                          {new Date(d.addedAt).toLocaleDateString("pt-AO")}
+                        </p>
+                      </div>
+                      <Button asChild variant="ghost" size="icon" title="Abrir/Reproduzir">
+                        <a href={d.url} target="_blank" rel="noopener noreferrer">
+                          <Play className="size-4" />
+                        </a>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Baixar para o dispositivo"
+                        disabled={active}
+                        onClick={() => downloadWithProgress(d)}
+                      >
+                        <Download className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Remover da lista"
+                        onClick={() => removeDownload(d.id)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                    {pr ? (
+                      <div className="px-1">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                          <div
+                            className={
+                              "h-full transition-all " +
+                              (pr.error ? "bg-destructive" : pr.done ? "bg-emerald-500" : "bg-primary")
+                            }
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {pr.error
+                            ? `Erro: ${pr.error}`
+                            : pr.done
+                              ? `Concluído · ${fmtBytes(pr.loaded)}`
+                              : pr.total > 0
+                                ? `${fmtBytes(pr.loaded)} / ${fmtBytes(pr.total)} · ${pct.toFixed(0)}%`
+                                : `Baixando... ${fmtBytes(pr.loaded)}`}
+                        </p>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
