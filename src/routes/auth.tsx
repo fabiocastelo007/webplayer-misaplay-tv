@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent, type ChangeEvent, type ReactNode } from "react";
-import { loadSettings, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
+import { loadSettings, onSettingsChanged, DEFAULT_TEXTS, type AdminTexts } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import { xtreamLogin } from "@/lib/xtream.functions";
 import { loadSession, saveSession, type XtreamUserInfo, type XtreamServerInfo, type XtreamPackage } from "@/lib/xtream";
@@ -78,8 +78,15 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [texts, setTexts] = useState<AdminTexts>(DEFAULT_TEXTS);
+  const [wallPosters, setWallPosters] = useState<string[]>([]);
   useEffect(() => {
-    setTexts(loadSettings().texts);
+    const sync = () => {
+      const s = loadSettings();
+      setTexts(s.texts);
+      setWallPosters(s.loginPosters);
+    };
+    sync();
+    return onSettingsChanged(sync);
   }, []);
 
 
@@ -115,7 +122,7 @@ function AuthPage() {
     }
   }
 
-  const wallPosters = typeof window !== "undefined" ? loadSettings().loginPosters : [];
+  
 
 
 
