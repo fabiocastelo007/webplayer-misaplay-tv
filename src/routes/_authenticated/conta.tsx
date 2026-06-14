@@ -41,6 +41,7 @@ function ContaPage() {
 
   const [selectedPlan, setSelectedPlan] = useState<Plan>(PLANS[0]);
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const [progress, setProgress] = useState<Record<string, { loaded: number; total: number; done?: boolean; error?: string }>>({});
 
   useEffect(() => {
     setDownloads(listDownloads());
@@ -48,6 +49,56 @@ function ContaPage() {
     window.addEventListener("misaplay-downloads-changed", handler);
     return () => window.removeEventListener("misaplay-downloads-changed", handler);
   }, []);
+
+  const downloadWithProgress = async (item: DownloadItem) => {
+    const extMatch = item.url.match(/\.([a-zA-Z0-9]{2,4})(?:\?|$)/);
+    const ext = extMatch ? extMatch[1] : "mp4";
+    const safe = item.title.replace(/[^a-zA-Z0-9-_. ]/g, "").slice(0, 100) || "video";
+    const filename = `${safe}.${ext}`;
+    const proxied = `/api/public/download?url=${encodeURIComponent(item.url)}&filename=${encodeURIComponent(filename)}`;
+    setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0 } }));
+    try {
+      const res = await fetch(proxied);
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      const total = Number(res.headers.get("content-length") || 0);
+      const reader = res.body.getReader();
+      const chunks: BlobPart[] = [];
+      let loaded = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          loaded += value.byteLength;
+          setProgress((p) => ({ ...p, [item.id]: { loaded, total } }));
+        }
+      }
+      const blob = new Blob(chunks);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+      setProgress((p) => ({ ...p, [item.id]: { loaded, total: total || loaded, done: true } }));
+      toast.success(`Download concluído: ${item.title}`);
+    } catch (e) {
+      setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, error: (e as Error).message } }));
+      toast.error("Falha no download. Tente novamente.");
+    }
+  };
+
+  const fmtBytes = (n: number) => {
+    if (!n) return "0 B";
+    const u = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    let v = n;
+    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+    return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+  };
 
   const handleRenew = () => {
     const link = whatsappRenewalLink({ username, plan: selectedPlan, pkg });
@@ -168,38 +219,76 @@ function ContaPage() {
             </div>
           ) : (
             <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-              {downloads.map((d) => (
-                <li
-                  key={d.id}
-                  className="flex items-center gap-3 rounded-xl bg-secondary/50 p-3 ring-1 ring-border/40"
-                >
-                  <div className="size-16 shrink-0 overflow-hidden rounded-md bg-secondary">
-                    {d.image ? (
-                      <img src={d.image} alt={d.title} className="h-full w-full object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{d.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {d.kind === "movie" ? "Filme" : "Episódio"} ·{" "}
-                      {new Date(d.addedAt).toLocaleDateString("pt-AO")}
-                    </p>
-                  </div>
-                  <Button asChild variant="ghost" size="icon" title="Abrir/Reproduzir">
-                    <a href={d.url} target="_blank" rel="noopener noreferrer">
-                      <Play className="size-4" />
-                    </a>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Remover da lista"
-                    onClick={() => removeDownload(d.id)}
+              {downloads.map((d) => {
+                const pr = progress[d.id];
+                const pct = pr && pr.total > 0 ? Math.min(100, (pr.loaded / pr.total) * 100) : pr?.done ? 100 : 0;
+                const active = !!pr && !pr.done && !pr.error;
+                return (
+                  <li
+                    key={d.id}
+                    className="flex flex-col gap-2 rounded-xl bg-secondary/50 p-3 ring-1 ring-border/40"
                   >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </li>
-              ))}
+                    <div className="flex items-center gap-3">
+                      <div className="size-16 shrink-0 overflow-hidden rounded-md bg-secondary">
+                        {d.image ? (
+                          <img src={d.image} alt={d.title} className="h-full w-full object-cover" />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{d.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {d.kind === "movie" ? "Filme" : "Episódio"} ·{" "}
+                          {new Date(d.addedAt).toLocaleDateString("pt-AO")}
+                        </p>
+                      </div>
+                      <Button asChild variant="ghost" size="icon" title="Abrir/Reproduzir">
+                        <a href={d.url} target="_blank" rel="noopener noreferrer">
+                          <Play className="size-4" />
+                        </a>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Baixar para o dispositivo"
+                        disabled={active}
+                        onClick={() => downloadWithProgress(d)}
+                      >
+                        <Download className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Remover da lista"
+                        onClick={() => removeDownload(d.id)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                    {pr ? (
+                      <div className="px-1">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                          <div
+                            className={
+                              "h-full transition-all " +
+                              (pr.error ? "bg-destructive" : pr.done ? "bg-emerald-500" : "bg-primary")
+                            }
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {pr.error
+                            ? `Erro: ${pr.error}`
+                            : pr.done
+                              ? `Concluído · ${fmtBytes(pr.loaded)}`
+                              : pr.total > 0
+                                ? `${fmtBytes(pr.loaded)} / ${fmtBytes(pr.total)} · ${pct.toFixed(0)}%`
+                                : `Baixando... ${fmtBytes(pr.loaded)}`}
+                        </p>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
