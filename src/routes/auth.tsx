@@ -77,6 +77,7 @@ function AuthPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const [texts, setTexts] = useState<AdminTexts>(DEFAULT_TEXTS);
   const [wallPosters, setWallPosters] = useState<string[]>([]);
   useEffect(() => {
@@ -95,18 +96,20 @@ function AuthPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setLoginError("");
     try {
       const { loadSettings } = await import("@/lib/settings");
       const servers = loadSettings().servers;
       const result = await login({ data: { username: username.trim(), password, servers } });
       if (!result.ok) {
+        let message = result.error;
         if (result.error === "expired") {
-          toast.error("Usuário vencido, entre em contacto");
+          message = "Usuário vencido, entre em contacto";
         } else if (result.error === "not_found") {
-          toast.error("Usuário não encontrado");
-        } else {
-          toast.error(result.error);
+          message = "Usuário não encontrado";
         }
+        setLoginError(message);
+        toast.error(message);
         return;
       }
 
@@ -122,7 +125,9 @@ function AuthPage() {
       toast.success(`Conectado no ${result.package === "MAX" ? "Pacote Max" : "Pacote Premium"}`);
       navigate({ to: "/perfis" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao autenticar");
+      const message = err instanceof Error ? err.message : "Falha ao autenticar";
+      setLoginError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -204,7 +209,7 @@ function AuthPage() {
                 autoComplete="username"
                 placeholder="seu_usuario"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => { setUsername(e.target.value); setLoginError(""); }}
                 required
                 maxLength={120}
                 className="h-12 bg-secondary/60 text-base"
@@ -218,7 +223,7 @@ function AuthPage() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setLoginError(""); }}
                 required
                 maxLength={200}
                 className="h-12 bg-secondary/60 text-base"
@@ -233,6 +238,11 @@ function AuthPage() {
             >
               {loading ? <Loader2 className="size-5 animate-spin" /> : <>▶ ACESSAR CONTEÚDO</>}
             </Button>
+            {loginError ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm font-medium text-destructive">
+                {loginError}
+              </div>
+            ) : null}
           </form>
 
           <div className="mt-5 flex items-center gap-3">
