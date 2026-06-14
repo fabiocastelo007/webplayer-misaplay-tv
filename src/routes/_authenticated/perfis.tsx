@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Lock, Plus, Pencil, Trash2, LogOut, Check, X } from "lucide-react";
+import { Lock, Plus, Pencil, Trash2, LogOut, Check, X, Upload } from "lucide-react";
+import { useRef } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,40 @@ export const Route = createFileRoute("/_authenticated/perfis")({
 });
 
 const AVATARS = ["🦸", "👩", "🧑", "👦", "👧", "🐱", "🐶", "🦊", "🐼", "🦁", "🐯", "🐵"];
+
+function isImageAvatar(a?: string) {
+  return !!a && (a.startsWith("data:") || a.startsWith("http"));
+}
+
+function AvatarView({ avatar, name, className }: { avatar?: string; name: string; className?: string }) {
+  if (isImageAvatar(avatar)) {
+    return <img src={avatar} alt={name} className={"h-full w-full rounded-full object-cover " + (className ?? "")} />;
+  }
+  return <span>{avatar || defaultAvatarFor(name)}</span>;
+}
+
+async function fileToAvatarDataUrl(file: File, size = 256): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    const scale = Math.max(size / img.width, size / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 function PerfisPage() {
   const navigate = useNavigate();
@@ -89,7 +124,7 @@ function PerfisPage() {
             >
               <div className="relative">
                 <div className="flex h-28 w-28 items-center justify-center rounded-full bg-secondary text-5xl ring-2 ring-transparent transition group-hover:ring-primary sm:h-32 sm:w-32">
-                  <span>{p.avatar || defaultAvatarFor(p.name)}</span>
+                  <AvatarView avatar={p.avatar} name={p.name} />
                 </div>
                 {p.pin && !manage ? (
                   <Lock className="absolute -top-1 right-0 size-5 rounded-full bg-background p-0.5 text-yellow-500" />
@@ -221,11 +256,50 @@ function ProfileEditor({
   const [pin, setPin] = useState(initial?.pin ?? "");
   const [usePin, setUsePin] = useState(!!initial?.pin);
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const usingPhoto = isImageAvatar(avatar);
+
+  async function handlePickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem");
+      return;
+    }
+    try {
+      const data = await fileToAvatarDataUrl(f);
+      setAvatar(data);
+    } catch {
+      toast.error("Não foi possível carregar a imagem");
+    }
+  }
+
   return (
     <Modal title={initial ? "Editar perfil" : "Novo perfil"} onClose={onClose}>
       <div className="space-y-4">
         <div>
           <Label className="mb-2 block">Avatar</Label>
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary text-3xl">
+              <AvatarView avatar={avatar} name={name || "?"} />
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePickFile}
+            />
+            <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+              <Upload className="size-4" /> {usingPhoto ? "Trocar foto" : "Importar foto"}
+            </Button>
+            {usingPhoto ? (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAvatar(AVATARS[0])}>
+                Remover
+              </Button>
+            ) : null}
+          </div>
           <div className="flex flex-wrap gap-2">
             {AVATARS.map((a) => (
               <button
