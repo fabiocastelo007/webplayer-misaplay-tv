@@ -111,9 +111,11 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="brand">Contactos</TabsTrigger>
           <TabsTrigger value="texts">Textos</TabsTrigger>
+          <TabsTrigger value="posters">Cartazes</TabsTrigger>
           <TabsTrigger value="colors">Cores</TabsTrigger>
           <TabsTrigger value="security">Segurança</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="servers" className="space-y-3">
           {s.servers.map((srv, i) => (
