@@ -12,6 +12,9 @@ export function AppHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const session = typeof window !== "undefined" ? loadSession() : null;
   const pkgLabel = session?.package === "MAX" ? "Pacote Max" : "Pacote Premium";
+  const expTs = session?.user_info?.exp_date ? Number(session.user_info.exp_date) * 1000 : null;
+  const daysLeft = expTs ? Math.ceil((expTs - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  const showExpiryAlert = daysLeft !== null && daysLeft <= 5;
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [admin, setAdmin] = useState(false);
