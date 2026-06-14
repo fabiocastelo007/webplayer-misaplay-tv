@@ -100,7 +100,13 @@ function AuthPage() {
       const servers = loadSettings().servers;
       const result = await login({ data: { username: username.trim(), password, servers } });
       if (!result.ok) {
-        toast.error(result.error);
+        if (result.error === "expired") {
+          toast.error("Usuário vencido, entre em contacto");
+        } else if (result.error === "not_found") {
+          toast.error("Usuário não encontrado");
+        } else {
+          toast.error(result.error);
+        }
         return;
       }
 
