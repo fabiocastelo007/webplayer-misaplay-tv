@@ -242,41 +242,103 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
 
         <TabsContent value="posters" className="space-y-3">
-          <div className="glass-card space-y-3 rounded-xl p-4">
-            <div className="space-y-1">
-              <Label>URLs dos cartazes da página de login (um por linha)</Label>
-              <textarea
-                className="min-h-[260px] w-full rounded-md border border-input bg-secondary/60 p-2 font-mono text-xs"
-                value={s.loginPosters.join("\n")}
-                onChange={(e) =>
-                  setS({
-                    ...s,
-                    loginPosters: e.target.value
-                      .split("\n")
-                      .map((l) => l.trim())
-                      .filter(Boolean),
-                  })
-                }
-                placeholder="https://image.tmdb.org/t/p/w500/..."
-              />
-              <p className="text-xs text-muted-foreground">
-                Cole URLs de cartazes (filmes, séries e desenhos de 2026). Recomendado: TMDB
-                <code className="mx-1">image.tmdb.org/t/p/w500/...</code>. Total actual:{" "}
-                <strong>{s.loginPosters.length}</strong>.
+          <div className="glass-card space-y-4 rounded-xl p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                Total: <strong>{s.loginPosters.length}</strong> cartazes
               </p>
-            </div>
-            {s.loginPosters.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-                {s.loginPosters.slice(0, 24).map((u, i) => (
-                  <img
-                    key={i}
-                    src={u}
-                    alt=""
-                    className="aspect-[2/3] w-full rounded-md object-cover"
+              <div className="ml-auto flex flex-wrap gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-secondary/60 px-3 py-1.5 text-sm hover:bg-secondary">
+                  <Plus className="size-4" /> Carregar imagens
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      if (!files.length) return;
+                      const dataUrls = await Promise.all(
+                        files.map(
+                          (f) =>
+                            new Promise<string>((resolve, reject) => {
+                              const r = new FileReader();
+                              r.onload = () => resolve(String(r.result));
+                              r.onerror = reject;
+                              r.readAsDataURL(f);
+                            }),
+                        ),
+                      );
+                      setS({ ...s, loginPosters: [...s.loginPosters, ...dataUrls] });
+                      toast.success(`${dataUrls.length} imagem(ns) adicionada(s)`);
+                      e.target.value = "";
+                    }}
                   />
-                ))}
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setS({ ...s, loginPosters: [...s.loginPosters, ""] })
+                  }
+                >
+                  <Plus className="size-4" /> Adicionar URL
+                </Button>
               </div>
-            )}
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {s.loginPosters.map((u, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 rounded-lg border border-input bg-secondary/40 p-2"
+                >
+                  <div className="flex size-6 shrink-0 items-center justify-center rounded bg-background text-[10px] font-bold">
+                    {i + 1}
+                  </div>
+                  {u ? (
+                    <img
+                      src={u}
+                      alt={`Cartaz ${i + 1}`}
+                      className="h-16 w-11 shrink-0 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-16 w-11 shrink-0 rounded bg-muted" />
+                  )}
+                  <Input
+                    value={u.startsWith("data:") ? `(imagem carregada • ${Math.round(u.length / 1024)} KB)` : u}
+                    readOnly={u.startsWith("data:")}
+                    placeholder="https://image.tmdb.org/t/p/w500/..."
+                    className="font-mono text-xs"
+                    onChange={(e) => {
+                      if (u.startsWith("data:")) return;
+                      const v = [...s.loginPosters];
+                      v[i] = e.target.value;
+                      setS({ ...s, loginPosters: v });
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setS({
+                        ...s,
+                        loginPosters: s.loginPosters.filter((_, idx) => idx !== i),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Carregue imagens do seu dispositivo (convertidas automaticamente)
+              ou cole URLs de cartazes do TMDB
+              (<code>image.tmdb.org/t/p/w500/...</code>). O número à esquerda
+              identifica cada cartaz.
+            </p>
           </div>
           <Button size="sm" onClick={() => persist(s)}>
             <Save className="size-4" /> Guardar
