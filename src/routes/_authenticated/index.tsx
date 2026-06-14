@@ -109,8 +109,11 @@ function Home() {
             image: v.stream_icon,
             category_id: v.category_id,
             ext: v.container_extension,
+            rating: v.rating_5based,
+            added: v.added ? Number(v.added) : undefined,
           }));
         }}
+
         onPlay={(item: ShowcaseItem) =>
           navigate({
             to: "/watch/$type/$id",

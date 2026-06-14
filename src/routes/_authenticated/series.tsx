@@ -25,6 +25,7 @@ function SeriesPage() {
           const list = await xtream.series(cat);
           return list.map((s: Serie) => {
             const year = s.releaseDate ? /\d{4}/.exec(s.releaseDate)?.[0] : undefined;
+            const addedTs = s.releaseDate ? Math.floor(new Date(s.releaseDate).getTime() / 1000) : undefined;
             return {
               id: s.series_id,
               name: s.name,
@@ -34,8 +35,10 @@ function SeriesPage() {
               year,
               rating: s.rating_5based,
               genre: s.genre,
+              added: Number.isFinite(addedTs) ? addedTs : undefined,
             };
           });
+
         }}
         onPlay={open}
         onOpen={open}
