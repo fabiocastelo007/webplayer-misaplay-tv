@@ -50,79 +50,25 @@ function ContaPage() {
     return () => window.removeEventListener("misaplay-downloads-changed", handler);
   }, []);
 
-  const downloadWithProgress = async (item: DownloadItem) => {
+  const downloadWithProgress = (item: DownloadItem) => {
     const extMatch = item.url.match(/\.([a-zA-Z0-9]{2,4})(?:\?|$)/);
     const ext = extMatch ? extMatch[1] : "mp4";
     const safe = item.title.replace(/[^a-zA-Z0-9-_. ]/g, "").slice(0, 100) || "video";
     const filename = `${safe}.${ext}`;
-    const proxied = `/api/public/download?url=${encodeURIComponent(item.url)}&filename=${encodeURIComponent(filename)}`;
-    setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0 } }));
-    const fallbackDirect = () => {
-      // Last resort: open the original URL in a new tab.
-      // The browser will play or download depending on Content-Type;
-      // user can then right-click → "Guardar vídeo como".
-      const a = document.createElement("a");
-      a.href = item.url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    };
-
-    try {
-      // First try direct fetch from the browser (works if upstream allows CORS).
-      let res: Response;
-      try {
-        res = await fetch(item.url, { mode: "cors" });
-        if (!res.ok || !res.body) throw new Error(`direct ${res.status}`);
-      } catch {
-        // Fall back to our server-side proxy.
-        res = await fetch(proxied);
-        if (!res.ok || !res.body) {
-          const msg = await res.text().catch(() => "");
-          // Upstream blocks our proxy IP — open directly so the user's
-          // own browser/IP can fetch it.
-          if (/403|forbidden/i.test(msg) || res.status === 502) {
-            setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, done: true } }));
-            toast.message("A abrir o vídeo numa nova aba — use 'Guardar como' do navegador.");
-            fallbackDirect();
-            return;
-          }
-          throw new Error(msg.slice(0, 200) || `HTTP ${res.status}`);
-        }
-      }
-      const total = Number(res.headers.get("content-length") || 0);
-      const reader = res.body.getReader();
-      const chunks: BlobPart[] = [];
-      let loaded = 0;
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          chunks.push(value);
-          loaded += value.byteLength;
-          setProgress((p) => ({ ...p, [item.id]: { loaded, total } }));
-        }
-      }
-      const blob = new Blob(chunks);
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
-      setProgress((p) => ({ ...p, [item.id]: { loaded, total: total || loaded, done: true } }));
-      toast.success(`Download concluído: ${item.title}`);
-    } catch (e) {
-      setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, error: (e as Error).message } }));
-      toast.error("Falha no download. A abrir directamente no navegador...");
-      fallbackDirect();
-    }
+    // The IPTV server blocks proxied requests (403), so we open the file
+    // directly from the user's browser. The `download` attribute is ignored
+    // cross-origin, but the browser will open the video and the user can
+    // right-click → "Guardar vídeo como" to save it offline.
+    const a = document.createElement("a");
+    a.href = item.url;
+    a.download = filename;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, done: true } }));
+    toast.message("Vídeo aberto em nova aba — clique com o botão direito e escolha 'Guardar vídeo como'.");
   };
 
   const fmtBytes = (n: number) => {
