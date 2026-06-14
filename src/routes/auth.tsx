@@ -127,9 +127,9 @@ function AuthPage() {
         <div className="glass-card w-full rounded-2xl p-8 sm:p-10">
           <div className="mb-7 text-center">
             <Logo className="mx-auto mb-4 h-14 w-auto" />
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">BEM-VINDO</h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{texts.welcomeTitle}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Acesse com seu usuário e senha. Validamos automaticamente nos servidores Max e Premium.
+              {texts.welcomeSubtitle}
             </p>
           </div>
 
