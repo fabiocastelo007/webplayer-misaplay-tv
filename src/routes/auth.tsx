@@ -78,8 +78,15 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [texts, setTexts] = useState<AdminTexts>(DEFAULT_TEXTS);
+  const [wallPosters, setWallPosters] = useState<string[]>([]);
   useEffect(() => {
-    setTexts(loadSettings().texts);
+    const sync = () => {
+      const s = loadSettings();
+      setTexts(s.texts);
+      setWallPosters(s.loginPosters);
+    };
+    sync();
+    return onSettingsChanged(sync);
   }, []);
 
 
