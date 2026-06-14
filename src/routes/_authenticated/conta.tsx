@@ -57,11 +57,41 @@ function ContaPage() {
     const filename = `${safe}.${ext}`;
     const proxied = `/api/public/download?url=${encodeURIComponent(item.url)}&filename=${encodeURIComponent(filename)}`;
     setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0 } }));
+    const fallbackDirect = () => {
+      // Last resort: open the original URL in a new tab.
+      // The browser will play or download depending on Content-Type;
+      // user can then right-click → "Guardar vídeo como".
+      const a = document.createElement("a");
+      a.href = item.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+
     try {
-      const res = await fetch(proxied);
-      if (!res.ok || !res.body) {
-        const msg = await res.text().catch(() => "");
-        throw new Error(msg || `HTTP ${res.status}`);
+      // First try direct fetch from the browser (works if upstream allows CORS).
+      let res: Response;
+      try {
+        res = await fetch(item.url, { mode: "cors" });
+        if (!res.ok || !res.body) throw new Error(`direct ${res.status}`);
+      } catch {
+        // Fall back to our server-side proxy.
+        res = await fetch(proxied);
+        if (!res.ok || !res.body) {
+          const msg = await res.text().catch(() => "");
+          // Upstream blocks our proxy IP — open directly so the user's
+          // own browser/IP can fetch it.
+          if (/403|forbidden/i.test(msg) || res.status === 502) {
+            setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, done: true } }));
+            toast.message("A abrir o vídeo numa nova aba — use 'Guardar como' do navegador.");
+            fallbackDirect();
+            return;
+          }
+          throw new Error(msg.slice(0, 200) || `HTTP ${res.status}`);
+        }
       }
       const total = Number(res.headers.get("content-length") || 0);
       const reader = res.body.getReader();
@@ -90,7 +120,8 @@ function ContaPage() {
       toast.success(`Download concluído: ${item.title}`);
     } catch (e) {
       setProgress((p) => ({ ...p, [item.id]: { loaded: 0, total: 0, error: (e as Error).message } }));
-      toast.error("Falha no download. Tente novamente.");
+      toast.error("Falha no download. A abrir directamente no navegador...");
+      fallbackDirect();
     }
   };
 
