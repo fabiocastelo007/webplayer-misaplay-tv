@@ -23,13 +23,19 @@ function SeriesPage() {
         fetchCategories={() => xtream.seriesCategories()}
         fetchItems={async (cat) => {
           const list = await xtream.series(cat);
-          return list.map((s: Serie) => ({
-            id: s.series_id,
-            name: s.name,
-            image: s.cover,
-            category_id: s.category_id,
-            plot: s.plot ?? s.genre,
-          }));
+          return list.map((s: Serie) => {
+            const year = s.releaseDate ? /\d{4}/.exec(s.releaseDate)?.[0] : undefined;
+            return {
+              id: s.series_id,
+              name: s.name,
+              image: s.cover,
+              category_id: s.category_id,
+              plot: s.plot ?? s.genre,
+              year,
+              rating: s.rating_5based,
+              genre: s.genre,
+            };
+          });
         }}
         onPlay={open}
         onOpen={open}
